@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 
 namespace AHREM_API
 {
@@ -117,31 +118,37 @@ namespace AHREM_API
             dummyDevices.AddRange(
                 new Device(
                     0,
+                    true,
                     "SonicWave BT-500",
                     "v1.0.1",
                     "1f:2b:60:6e:e5"),
                 new Device(
                     1,
+                    true,
                     "PulseLink Pro",
                     "v1.0.1",
                     "f3:6e:69:6d:e5"),
                 new Device(
                     2,
+                    false,
                     "EchoBeam X2",
                     "v1.0.1",
                     "1a:2c:e0:6e:e5"),
                 new Device(
                     3,
+                    false,
                     "NexusConnect Elite",
                     "v1.0.1",
                     "1f:fb:cd:ce:e5"), 
                 new Device(
                     4,
+                    false,
                     "WaveSphere Mini",
                     "v1.0.1",
                     "0f:1f:69:9e:e5"),
                 new Device(
                     5,
+                    true,
                     "QuantumSync V3",
                     "v1.0.1",
                     "ff:5b:e0:ee:e9")
@@ -178,10 +185,23 @@ namespace AHREM_API
                 return Results.Ok(newList);
             });
 
-            app.MapGet("/GetDevices", (HttpContext httpContext) =>
+            app.MapGet("/GetAllDevices", () =>
             {
+                return Results.Ok(dummyDevices);
+            });
 
-                return Results.Ok("YIPPPIIIIIIEEEEEE!");
+            app.MapGet("/GetDevice", (HttpContext httpContext) =>
+            {
+                int? deviceId = ValidateId(httpContext);
+
+                foreach (var item in dummyDevices)
+                {
+                    if (item.DeviceId.Equals(deviceId))
+                    {
+                        return Results.Ok(item);
+                    }
+                }
+                return Results.NotFound("No devices with provided device ID");
             });
 
             app.MapPost("/PostDataForDevice", (HttpContext httpContext) =>
@@ -194,8 +214,17 @@ namespace AHREM_API
                 return Results.Ok("yay!");
             }); // TODO
 
-            app.MapPost("/AddDevice", (HttpContext httpContext) =>
+            app.MapPost("/AddDevice", async (HttpContext httpContext) =>
             {
+                string requestBody;
+
+                using (var reader = new StreamReader(httpContext.Request.Body))
+                {
+                    requestBody = await reader.ReadToEndAsync();
+                }
+
+                Debug.WriteLine(requestBody);
+
                 return Results.Ok("yay!");
             }); // TODO
 

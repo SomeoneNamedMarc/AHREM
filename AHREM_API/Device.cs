@@ -3,20 +3,22 @@
     public class Device
     {
         public int? DeviceId { get; set; }
+        public bool IsActive { get; set; }
         public string? DeviceName { get; set; }
         public string? Firmware { get; set; }
         public string? MACAddress { get; set; }
 
         public Device(
             int? deviceId,
+            bool? isActive,
             string? deviceName, 
             string? firmware, 
-            string? mACAddress)
+            string? macAddress)
         {
             DeviceId = deviceId;
             DeviceName = deviceName;
             Firmware = firmware;
-            MACAddress = mACAddress;
+            MACAddress = macAddress;
         }
     }
 }
