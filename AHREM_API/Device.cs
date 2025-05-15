@@ -7,18 +7,5 @@
         public string? DeviceName { get; set; }
         public string? Firmware { get; set; }
         public string? MACAddress { get; set; }
-
-        public Device(
-            int? deviceId,
-            bool? isActive,
-            string? deviceName, 
-            string? firmware, 
-            string? macAddress)
-        {
-            DeviceId = deviceId;
-            DeviceName = deviceName;
-            Firmware = firmware;
-            MACAddress = macAddress;
-        }
     }
 }

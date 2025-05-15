@@ -1,5 +1,6 @@
 
 using System.Diagnostics;
+using System.Net.Mail;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
@@ -116,42 +117,53 @@ namespace AHREM_API
                 )
             ); // Initial dummy data
             dummyDevices.AddRange(
-                new Device(
-                    0,
-                    true,
-                    "SonicWave BT-500",
-                    "v1.0.1",
-                    "1f:2b:60:6e:e5"),
-                new Device(
-                    1,
-                    true,
-                    "PulseLink Pro",
-                    "v1.0.1",
-                    "f3:6e:69:6d:e5"),
-                new Device(
-                    2,
-                    false,
-                    "EchoBeam X2",
-                    "v1.0.1",
-                    "1a:2c:e0:6e:e5"),
-                new Device(
-                    3,
-                    false,
-                    "NexusConnect Elite",
-                    "v1.0.1",
-                    "1f:fb:cd:ce:e5"), 
-                new Device(
-                    4,
-                    false,
-                    "WaveSphere Mini",
-                    "v1.0.1",
-                    "0f:1f:69:9e:e5"),
-                new Device(
-                    5,
-                    true,
-                    "QuantumSync V3",
-                    "v1.0.1",
-                    "ff:5b:e0:ee:e9")
+                new Device {
+                    DeviceId = 0,
+                    IsActive = true,
+                    DeviceName = "SonicWave BT-500",
+                    Firmware = "v1.0.1",
+                    MACAddress = "1f:2b:60:6e:e5"
+                },
+                new Device
+                {
+                    DeviceId = 1,
+                    IsActive = true,
+                    DeviceName = "PulseLink Pro",
+                    Firmware = "v1.0.1",
+                    MACAddress = "f3:6e:69:6d:e5"
+                },
+                new Device
+                {
+                    DeviceId = 2,
+                    IsActive = false,
+                    DeviceName = "EchoBeam X2",
+                    Firmware = "v1.0.1",
+                    MACAddress = "1a:2c:e0:6e:e5"
+                },
+                new Device
+                {
+                    DeviceId = 3,
+                    IsActive = false,
+                    DeviceName = "NexusConnect Elite",
+                    Firmware = "v1.0.1",
+                    MACAddress = "1f:fb:cd:ce:e5"
+                },
+                new Device
+                {
+                    DeviceId = 4,
+                    IsActive = false,
+                    DeviceName = "WaveSphere Mini",
+                    Firmware = "v1.0.1",
+                    MACAddress = "0f:1f:69:9e:e5"
+                },
+                new Device
+                {
+                    DeviceId = 5,
+                    IsActive = true,
+                    DeviceName = "QuantumSync V3",
+                    Firmware = "v1.0.1",
+                    MACAddress = "ff:5b:e0:ee:e9"
+                }
                 ); // Initial dummy devices
 
             dummyData.Add(new DeviceData(
@@ -213,19 +225,20 @@ namespace AHREM_API
             {
                 return Results.Ok("yay!");
             }); // TODO
-
-            app.MapPost("/AddDevice", async (HttpContext httpContext) =>
+                
+            app.MapPost("/AddDevice", (Device device) =>
             {
-                string requestBody;
-
-                using (var reader = new StreamReader(httpContext.Request.Body))
+                if (!IsFullObject(device))
                 {
-                    requestBody = await reader.ReadToEndAsync();
+                    return Results.BadRequest(new
+                    {
+                        message = "A full device object is needed."
+                    });
                 }
 
-                Debug.WriteLine(requestBody);
+                Debug.WriteLine($"ID: {device.DeviceId} - Name: {device.DeviceName} - Active: {device.IsActive}");
 
-                return Results.Ok("yay!");
+                return Results.Ok("The device has been added!");
             }); // TODO
 
             app.Run();
@@ -258,6 +271,16 @@ namespace AHREM_API
                 deviceId = -1;
             }
             return (int)deviceId;
+        }
+
+        public static bool IsFullObject(Device device)
+        {
+            if (device.DeviceId == null
+                || string.IsNullOrWhiteSpace(device.DeviceName)
+                || string.IsNullOrWhiteSpace(device.Firmware)
+                || string.IsNullOrWhiteSpace(device.MACAddress))
+                return false;
+            return true;
         }
     }
 }
