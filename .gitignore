@@ -9,7 +9,7 @@
 *.user
 *.userosscache
 *.sln.docstates
-AHREM_API/appsettings.Development.json
+AHREM_API/appsettings.json
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
