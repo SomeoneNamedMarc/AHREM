@@ -15,6 +15,83 @@ namespace AHREM_API.Services
             _connection = new MySqlConnection(_connectionString);
         }
 
+        public User GetUser(int id)
+        {
+            if (id != null && id >= 0)
+            {
+                _connection.Open();
+                using (var cmd = _connection.CreateCommand())
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.CommandTimeout = 300;
+                    cmd.CommandText = $"SELECT * FROM user WHERE ID = {id}";
+                    MySqlDataReader sqlData = cmd.ExecuteReader();
+                    if (sqlData.Read())
+                    {
+                        return new User
+                        {
+                            ID = sqlData.GetInt16("ID"),
+                            Email = sqlData.GetString("Email"),
+                            Password = sqlData.GetString("Password"),
+                            IsAdmin = sqlData.GetBoolean("IsAdmin")
+                        };
+                    }
+                }
+            }
+            return null;
+        }
+        public User GetUser(string email)
+        {
+            if (!string.IsNullOrEmpty(email))
+            {
+                _connection.Open();
+                using (var cmd = _connection.CreateCommand())
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.CommandTimeout = 300;
+                    cmd.CommandText = $"SELECT * FROM user WHERE Email = \"{email}\"";
+                    MySqlDataReader sqlData = cmd.ExecuteReader();
+                    if (sqlData.Read())
+                    {
+                        return new User
+                        {
+                            ID = sqlData.GetInt16("ID"),
+                            Email = sqlData.GetString("Email"),
+                            Password = sqlData.GetString("Password"),
+                            IsAdmin = sqlData.GetBoolean("IsAdmin")
+                        };
+                    }
+                }
+            }
+            return null;
+        }
+
+        public List<User> GetAllUsers()
+        {
+            _connection.Open();
+            using (var cmd = _connection.CreateCommand())
+            {
+                cmd.CommandType = CommandType.Text;
+                cmd.CommandTimeout = 300;
+                cmd.CommandText = "SELECT * FROM user";
+
+                MySqlDataReader sqlData = cmd.ExecuteReader();
+
+                List<User> tempList = new List<User>();
+                while (sqlData.Read())
+                {
+                    tempList.Add(new User
+                    {
+                        ID = sqlData.GetInt16("ID"),
+                        Email = sqlData.GetString("Email"),
+                        Password = sqlData.GetString("Password"),
+                        IsAdmin = sqlData.GetBoolean("IsAdmin")
+                    });
+                }
+                return tempList;
+            }
+        }
+
         public List<DeviceData> GetDeviceDataForDeviceId(int deviceId)
         {
             if(_connection != null)
@@ -200,9 +277,23 @@ namespace AHREM_API.Services
         {
             if (_connection != null)
             {
+                _connection.Open();
 
+                using (var cmd = _connection.CreateCommand())
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.CommandTimeout = 300;
+                    cmd.CommandText = "DELETE FROM devices WHERE ID = @id";
+                    cmd.Parameters.AddWithValue("@id", id);
+
+                    int affectedRows = cmd.ExecuteNonQuery();
+                    return affectedRows > 0;
+                }
             }
+            return false;
         }
+
+        /*
         /// <summary>
         /// Queries db, provide MySQL object and query string.
         /// </summary>
@@ -259,7 +350,7 @@ namespace AHREM_API.Services
             DateTime epoch = DateTime.UnixEpoch;
             return (long)(dateTime.ToUniversalTime() - epoch).TotalSeconds;
         }
-        /*
+        
         public MySqlConnection ConnectToDB(string connectionString)
         {
             try

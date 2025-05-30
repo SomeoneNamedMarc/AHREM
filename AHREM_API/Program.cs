@@ -41,14 +41,35 @@ namespace AHREM_API
             #region Users
             app.MapGet("GetAllUsers", (DBService dBService) =>
             {
-                // TODO
+                var users = dBService.GetAllUsers();
+                if (users != null && users.Count > 0)
+                {
+                    return Results.Ok(users);
+                }
+                return Results.NotFound("No users found in the database!");
             });
 
             app.MapGet("/GetUser", (int? id, string? email, DBService dbService) =>
             {
                 if (id.HasValue)
                 {
+                    var user = dbService.GetUser(id.Value);
+                    if (user != null)
+                    {
+                        return Results.Ok(user);
+                    }
+                    return Results.NotFound("No user with that ID found!");
                 }
+                else if (!string.IsNullOrEmpty(email))
+                {
+                    var user = dbService.GetUser(email);
+                    if (user != null)
+                    {
+                        return Results.Ok(user);
+                    }
+                    return Results.NotFound("No user with that email found!");
+                }
+                return Results.BadRequest("No user ID or email provided!");
             });
 
             app.Run();
