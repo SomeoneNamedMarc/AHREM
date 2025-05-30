@@ -1,4 +1,9 @@
 
+using AHREM_API.Models;
+using AHREM_API.Services;
+using Microsoft.AspNetCore.Components.Sections;
+using MySqlConnector;
+using System.Data;
 using System.Diagnostics;
 using System.Net.Mail;
 using System.Reflection;
@@ -14,7 +19,13 @@ namespace AHREM_API
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-            //builder.Services.AddAuthorization();
+            builder.Configuration
+                .AddJsonFile("appsettings.json", optional: false)
+                .AddJsonFile("appsettings.variables.json", optional: true)
+                .AddEnvironmentVariables();
+            builder.Services.AddAuthentication();
+
+            builder.Services.AddScoped<DBService>();
 
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
@@ -26,261 +37,84 @@ namespace AHREM_API
             {
                 app.MapOpenApi();
             }
-
-            //app.UseHttpsRedirection();
-
-            //app.UseAuthorization();
-
-            List<DeviceData> dummyData = new List<DeviceData>();
-            List<Device> dummyDevices = new List<Device>();
-
-            dummyData.AddRange(
-                new DeviceData(
-                    0, // deviceId
-                    18.2f, // temperature
-                    6.2f, // humidity
-                    14.2f, // radon
-                    20.1f, // PPM
-                    10.5f, // airQuality
-                    "300", // roomName
-                    475342 // timeStamp
-                ),
-                new DeviceData(
-                    1, // deviceId
-                    18.2f, // temperature
-                    6.2f, // humidity
-                    14.2f, // radon
-                    20.1f, // PPM
-                    10.5f, // airQuality
-                    "300", // roomName
-                    475342 // timeStamp
-                ),
-                new DeviceData(
-                    2, // deviceId
-                    18.2f, // temperature
-                    6.2f, // humidity
-                    14.2f, // radon
-                    20.1f, // PPM
-                    10.5f, // airQuality
-                    "300", // roomName
-                    475342 // timeStamp
-                ),
-                new DeviceData(
-                    3, // deviceId
-                    18.2f, // temperature
-                    6.2f, // humidity
-                    14.2f, // radon
-                    20.1f, // PPM
-                    10.5f, // airQuality
-                    "300", // roomName
-                    475342 // timeStamp
-                ),
-                new DeviceData(
-                    4, // deviceId
-                    18.2f, // temperature
-                    6.2f, // humidity
-                    14.2f, // radon
-                    20.1f, // PPM
-                    10.5f, // airQuality
-                    "300", // roomName
-                    475342 // timeStamp
-                ),
-                new DeviceData(
-                    5, // deviceId
-                    18.2f, // temperature
-                    6.2f, // humidity
-                    14.2f, // radon
-                    20.1f, // PPM
-                    10.5f, // airQuality
-                    "300", // roomName
-                    475342 // timeStamp
-                ),
-                new DeviceData(
-                    6, // deviceId
-                    18.2f, // temperature
-                    6.2f, // humidity
-                    14.2f, // radon
-                    20.1f, // PPM
-                    10.5f, // airQuality
-                    "300", // roomName
-                    475342 // timeStamp
-                ),
-                new DeviceData(
-                    7, // deviceId
-                    18.2f, // temperature
-                    6.2f, // humidity
-                    14.2f, // radon
-                    20.1f, // PPM
-                    10.5f, // airQuality
-                    "300", // roomName
-                    475342 // timeStamp
-                )
-            ); // Initial dummy data
-            dummyDevices.AddRange(
-                new Device {
-                    DeviceId = 0,
-                    IsActive = true,
-                    DeviceName = "SonicWave BT-500",
-                    Firmware = "v1.0.1",
-                    MACAddress = "1f:2b:60:6e:e5"
-                },
-                new Device
-                {
-                    DeviceId = 1,
-                    IsActive = true,
-                    DeviceName = "PulseLink Pro",
-                    Firmware = "v1.0.1",
-                    MACAddress = "f3:6e:69:6d:e5"
-                },
-                new Device
-                {
-                    DeviceId = 2,
-                    IsActive = false,
-                    DeviceName = "EchoBeam X2",
-                    Firmware = "v1.0.1",
-                    MACAddress = "1a:2c:e0:6e:e5"
-                },
-                new Device
-                {
-                    DeviceId = 3,
-                    IsActive = false,
-                    DeviceName = "NexusConnect Elite",
-                    Firmware = "v1.0.1",
-                    MACAddress = "1f:fb:cd:ce:e5"
-                },
-                new Device
-                {
-                    DeviceId = 4,
-                    IsActive = false,
-                    DeviceName = "WaveSphere Mini",
-                    Firmware = "v1.0.1",
-                    MACAddress = "0f:1f:69:9e:e5"
-                },
-                new Device
-                {
-                    DeviceId = 5,
-                    IsActive = true,
-                    DeviceName = "QuantumSync V3",
-                    Firmware = "v1.0.1",
-                    MACAddress = "ff:5b:e0:ee:e9"
-                }
-                ); // Initial dummy devices
-
-            dummyData.Add(new DeviceData(
-                    1, // deviceId
-                    27.2f, // temperature
-                    6.2f, // humidity
-                    14.2f, // radon
-                    20.1f, // PPM
-                    10.5f, // airQuality
-                    "300", // roomName
-                    475768 // timeStamp
-                )); // Adding extra dummy data
-
-            app.MapGet("/GetDataForDevice", (HttpContext httpContext) =>
+            
+            // Get all data for device with a certain ID or room name.
+            app.MapGet("/GetDataForDevice", (int? id, string? roomName, DBService dBService) =>
             {
-                int? deviceId = ValidateId(httpContext);
-                string roomName = httpContext.Request.Query["roomName"].ToString() ?? "N/A";
+                Debug.WriteLine($"Recieved request - Device ID: {id}, Room: {roomName}");
 
-                var newList = new List<DeviceData>();
-
-                Debug.WriteLine($"Recieved request - Device ID: {deviceId}, Room: {roomName}");
-
-                foreach (var item in dummyData)
+                if (id != null)
                 {
-                    if(deviceId == item.DeviceId)
-                    {
-                        newList.Add(item);
-                    }
+                    return Results.Ok(dBService.GetDeviceDataForDeviceId(id.Value));
+                }
+                else if (roomName != null)
+                {
+                    return Results.Ok(dBService.GetDeviceDataForRoomName(roomName));
                 }
 
-                return Results.Ok(newList);
+                return Results.BadRequest("No device with that ID!");
             });
 
-            app.MapGet("/GetAllDevices", () =>
+            // Get a list of all device (for admins).
+            app.MapGet("/GetAllDevices", (DBService dBService) =>
             {
-                return Results.Ok(dummyDevices);
+                return Results.Ok(dBService.GetAllDevices);
             });
 
-            app.MapGet("/GetDevice", (HttpContext httpContext) =>
+            // Removes device with given ID.
+            app.MapGet("/RemoveDevice", (int? id, DBService dBService) =>
             {
-                int? deviceId = ValidateId(httpContext);
-
-                foreach (var item in dummyDevices)
+                if (id != null)
                 {
-                    if (item.DeviceId.Equals(deviceId))
-                    {
-                        return Results.Ok(item);
-                    }
+                    return Results.Ok(dBService.DeleteDevice(id.Value));
                 }
-                return Results.NotFound("No devices with provided device ID");
+                return Results.BadRequest("No device with given ID!");
             });
 
-            app.MapPost("/PostDataForDevice", (HttpContext httpContext) =>
+            // Get information about a certain device.
+            app.MapGet("/GetDevice", async (int? id, DBService dbService) =>
             {
-                return Results.Ok("yay!");
-            }); // TODO
+                var test = dbService.GetDevice(id.Value);
+
+                if(test != null)
+                {
+                    return Results.Ok(test);
+                }
+                return Results.NotFound("No device with provided ID found!");
+            });
+
+            // Post a devices measurment of airquality and all relevant data.
+            app.MapPost("/PostDataForDevice", (DeviceData deviceData, DBService dBService) =>
+            {
+                var test = dBService.PostDeviceData(deviceData);
+
+                if (!test)
+                {
+                    return Results.Problem("Could not post data to DB!");
+                }
+
+                return Results.Ok("Posted successfully to DB!");
+            });
 
             app.MapPost("/VerifyDevice", (HttpContext httpContext) =>
             {
                 return Results.Ok("yay!");
             }); // TODO
-                
-            app.MapPost("/AddDevice", (Device device) =>
+            
+            // Adds new device to database.
+            app.MapPost("/AddDevice", (Device device, DBService dBService) =>
             {
-                if (!IsFullObject(device))
-                {
-                    return Results.BadRequest(new
-                    {
-                        message = "A full device object is needed."
-                    });
-                }
+                var test = dBService.AddDevice(device);
 
-                Debug.WriteLine($"ID: {device.DeviceId} - Name: {device.DeviceName} - Active: {device.IsActive}");
+                if (!test)
+                {
+                    return Results.Problem("Error while trying to add new device!");
+                }
 
                 return Results.Ok("The device has been added!");
-            }); // TODO
+            });
 
             app.Run();
-        }
-
-        /// <summary>
-        /// Will Validate and convert httpContext ID param to integer type. Provide httpContext that has deviceId as a param.
-        /// Will return -1 if invalid value is provided or other type of variable is provided.
-        /// </summary>
-        /// <param name="httpContext"></param>
-        /// <returns></returns>
-        public static int ValidateId(HttpContext httpContext)
-        {
-            int? deviceId = null;
-            string deviceIdStr = httpContext.Request.Query["deviceId"];
-
-            if (!string.IsNullOrEmpty(deviceIdStr))
-            {
-                if (int.TryParse(deviceIdStr, out int parsedDeviceId))
-                {
-                    deviceId = parsedDeviceId < 0 ? -1 : parsedDeviceId;
-                }
-                else
-                {
-                    deviceId = -1;
-                }
-            }
-            else
-            {
-                deviceId = -1;
-            }
-            return (int)deviceId;
-        }
-
-        public static bool IsFullObject(Device device)
-        {
-            if (device.DeviceId == null
-                || string.IsNullOrWhiteSpace(device.DeviceName)
-                || string.IsNullOrWhiteSpace(device.Firmware)
-                || string.IsNullOrWhiteSpace(device.MACAddress))
-                return false;
-            return true;
         }
     }
 }
