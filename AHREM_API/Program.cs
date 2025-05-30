@@ -37,28 +37,35 @@ namespace AHREM_API
             {
                 app.MapOpenApi();
             }
-            
-            // Get all data for device with a certain ID or room name.
-            app.MapGet("/GetDataForDevice", (int? id, string? roomName, DBService dBService) =>
+
+            #region Users
+            app.MapGet("GetAllUsers", (DBService dBService) =>
             {
-                Debug.WriteLine($"Recieved request - Device ID: {id}, Room: {roomName}");
-
-                if (id != null)
-                {
-                    return Results.Ok(dBService.GetDeviceDataForDeviceId(id.Value));
-                }
-                else if (roomName != null)
-                {
-                    return Results.Ok(dBService.GetDeviceDataForRoomName(roomName));
-                }
-
-                return Results.BadRequest("No device with that ID!");
+                // TODO
             });
 
-            // Get a list of all device (for admins).
-            app.MapGet("/GetAllDevices", (DBService dBService) =>
+            app.MapGet("/GetUser", (int? id, string? email, DBService dbService) =>
             {
-                return Results.Ok(dBService.GetAllDevices);
+                if (id.HasValue)
+                {
+                }
+            });
+
+            app.Run();
+            #endregion
+
+            #region Devices
+            // Adds new device to database.
+            app.MapPost("/AddDevice", (Device device, DBService dBService) =>
+            {
+                var test = dBService.AddDevice(device);
+
+                if (!test)
+                {
+                    return Results.Problem("Error while trying to add new device!");
+                }
+
+                return Results.Ok("The device has been added!");
             });
 
             // Removes device with given ID.
@@ -76,11 +83,36 @@ namespace AHREM_API
             {
                 var test = dbService.GetDevice(id.Value);
 
-                if(test != null)
+                if (test != null)
                 {
                     return Results.Ok(test);
                 }
                 return Results.NotFound("No device with provided ID found!");
+            });
+
+            // Get a list of all device (for admins).
+            app.MapGet("/GetAllDevices", (DBService dBService) =>
+            {
+                return Results.Ok(dBService.GetAllDevices);
+            });
+            #endregion
+
+            #region Device Data
+            // Get all data for device with a certain ID or room name.
+            app.MapGet("/GetDataForDevice", (int? id, string? roomName, DBService dBService) =>
+            {
+                Debug.WriteLine($"Recieved request - Device ID: {id}, Room: {roomName}");
+
+                if (id != null)
+                {
+                    return Results.Ok(dBService.GetDeviceDataForDeviceId(id.Value));
+                }
+                else if (roomName != null)
+                {
+                    return Results.Ok(dBService.GetDeviceDataForRoomName(roomName));
+                }
+
+                return Results.BadRequest("No device with that ID!");
             });
 
             // Post a devices measurment of airquality and all relevant data.
@@ -100,21 +132,7 @@ namespace AHREM_API
             {
                 return Results.Ok("yay!");
             }); // TODO
-            
-            // Adds new device to database.
-            app.MapPost("/AddDevice", (Device device, DBService dBService) =>
-            {
-                var test = dBService.AddDevice(device);
-
-                if (!test)
-                {
-                    return Results.Problem("Error while trying to add new device!");
-                }
-
-                return Results.Ok("The device has been added!");
-            });
-
-            app.Run();
+            #endregion
         }
     }
 }
