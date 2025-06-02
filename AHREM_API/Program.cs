@@ -2,17 +2,20 @@
 using AHREM_API.Models;
 using AHREM_API.Services;
 using Microsoft.AspNetCore.Components.Sections;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using MySqlConnector;
 using System.Data;
 using System.Diagnostics;
+using System.Net.Http;
 using System.Net.Mail;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
-using Microsoft.AspNetCore.Mvc;
 
 namespace AHREM_API
 {
@@ -48,9 +51,15 @@ namespace AHREM_API
             #endregion
 
             #region Users
-            app.MapGet("GetAllUsers", (DBService dbService) =>
+            app.MapGet("/API/GetAllUsers", (HttpContext httpContext, DBService dbService) =>
             {
+                if (!IsValidToken(httpContext, key))
+                {
+                    return Results.Problem("Not logged in!");
+                }
+
                 var users = dbService.GetAllUsers();
+
                 if (users != null && users.Count > 0)
                 {
                     return Results.Ok(users);
@@ -58,8 +67,13 @@ namespace AHREM_API
                 return Results.NotFound("No users found in the database!");
             });
 
-            app.MapGet("/GetUser", (int? id, string? email, DBService dbService) =>
+            app.MapGet("/API/GetUser", (HttpContext httpContext, int? id, string? email, DBService dbService) =>
             {
+                if (!IsValidToken(httpContext, key))
+                {
+                    return Results.Problem("Not logged in!");
+                }
+
                 if (id.HasValue)
                 {
                     var user = dbService.GetUser(id.Value);
@@ -84,8 +98,13 @@ namespace AHREM_API
 
             #region Devices
             // Adds new device to database.
-            app.MapPost("/AddDevice", (Device device, DBService dbService) =>
+            app.MapPost("/API/AddDevice", (HttpContext httpContext, Device device, DBService dbService) =>
             {
+                if (!IsValidToken(httpContext, key))
+                {
+                    return Results.Problem("Not logged in!");
+                }
+
                 var test = dbService.AddDevice(device);
 
                 if (!test)
@@ -97,8 +116,13 @@ namespace AHREM_API
             });
 
             // Removes device with given ID.
-            app.MapGet("/RemoveDevice", (int? id, DBService dbService) =>
+            app.MapGet("/API/RemoveDevice", (HttpContext httpContext, int? id, DBService dbService) =>
             {
+                if (!IsValidToken(httpContext, key))
+                {
+                    return Results.Problem("Not logged in!");
+                }
+
                 if (id != null)
                 {
                     return Results.Ok(dbService.DeleteDevice(id.Value));
@@ -107,8 +131,13 @@ namespace AHREM_API
             });
 
             // Get information about a certain device.
-            app.MapGet("/GetDevice", async (int? id, DBService dbService) =>
+            app.MapGet("/API/GetDevice", async (HttpContext httpContext, int? id, DBService dbService) =>
             {
+                if (!IsValidToken(httpContext, key))
+                {
+                    return Results.Problem("Not logged in!");
+                }
+
                 var test = dbService.GetDevice(id.Value);
 
                 if (test != null)
@@ -119,16 +148,26 @@ namespace AHREM_API
             });
 
             // Get a list of all device (for admins).
-            app.MapGet("/GetAllDevices", (DBService dbService) =>
+            app.MapGet("/API/GetAllDevices", (HttpContext httpContext, DBService dbService) =>
             {
+                if (!IsValidToken(httpContext, key))
+                {
+                    return Results.Problem("Not logged in!");
+                }
+
                 return Results.Ok(dbService.GetAllDevices);
             });
             #endregion
 
             #region Device Data
             // Get all data for device with a certain ID or room name.
-            app.MapGet("/GetDataForDevice", (int? id, string? roomName, DBService dbService) =>
+            app.MapGet("/API/GetDataForDevice", (HttpContext httpContext, int? id, string? roomName, DBService dbService) =>
             {
+                if (!IsValidToken(httpContext, key))
+                {
+                    return Results.Problem("Not logged in!");
+                }
+
                 Debug.WriteLine($"Recieved request - Device ID: {id}, Room: {roomName}");
 
                 if (id != null)
@@ -144,8 +183,13 @@ namespace AHREM_API
             });
 
             // Post a devices measurment of airquality and all relevant data.
-            app.MapPost("/PostDataForDevice", (DeviceData deviceData, DBService dbService) =>
+            app.MapPost("/API/PostDataForDevice", (HttpContext httpContext, DeviceData deviceData, DBService dbService) =>
             {
+                if (!IsValidToken(httpContext, key))
+                {
+                    return Results.Problem("Not logged in!");
+                }
+
                 var test = dbService.PostDeviceData(deviceData);
 
                 if (!test)
@@ -156,14 +200,14 @@ namespace AHREM_API
                 return Results.Ok("Posted successfully to DB!");
             });
 
-            app.MapPost("/VerifyDevice", (HttpContext httpContext) =>
+            app.MapPost("/API/VerifyDevice", (HttpContext httpContext) =>
             {
                 return Results.Ok("yay!");
             }); // TODO
             #endregion
 
             #region Login/Verify
-            app.MapPost("/Login", (LoginRequest loginRequest, DBService dbService) =>
+            app.MapPost("/API/Login", (HttpContext httpContext, LoginRequest loginRequest, DBService dbService) =>
             {
                 if (dbService.CanLogin(loginRequest) && key != null)
                 {
@@ -172,7 +216,7 @@ namespace AHREM_API
 
                     var token = handler.CreateToken(new SecurityTokenDescriptor
                     {
-                        Claims = new Dictionary<string, object>{ ["user"] = loginRequest.Email },
+                        Claims = new Dictionary<string, object> { ["email"] = loginRequest.Email },
                         Expires = DateTime.UtcNow.AddHours(1),
                         SigningCredentials = new SigningCredentials(tokenKey, SecurityAlgorithms.HmacSha256)
                     });
@@ -183,6 +227,45 @@ namespace AHREM_API
             #endregion
 
             app.Run();
+        }
+        public static bool IsValidToken(HttpContext httpContext, string key)
+        {
+            if(string.IsNullOrEmpty(key))
+            {
+                return false;
+            }
+            var authHeader = httpContext.Request.Headers.Authorization.FirstOrDefault();
+
+            if (authHeader == null || !authHeader.StartsWith("Bearer "))
+            {
+                return false;
+            }
+
+            var token = authHeader.Substring("Bearer ".Length).Trim();
+
+            try
+            {
+                var handler = new JsonWebTokenHandler();
+                var tokenKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
+
+                var result = handler.ValidateTokenAsync(token, new TokenValidationParameters
+                {
+                    IssuerSigningKey = tokenKey,
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateLifetime = true
+                });
+
+                if (!result.Result.IsValid)
+                {
+                    return false;
+                }
+                return result.Result.IsValid;
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }
