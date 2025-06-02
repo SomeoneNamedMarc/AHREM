@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+			 xmlns:vm="clr-namespace:AHREM_Mobile_App.ViewModels"
+			 x:Class="AHREM_Mobile_App.Views.LoginPage"
+			 x:DataType="vm:LoginViewModel">
+
+    <VerticalStackLayout Spacing="20" Padding="30">
+        <Label Text="Welcome! Please log in." FontSize="24" HorizontalOptions="Center" />
+
+        <Entry x:Name="usernameEntry" Placeholder="Username" />
+        <Entry x:Name="passwordEntry" Placeholder="Password" IsPassword="True" />
+
+        <Button Text="Login" Command="{Binding LoginCommand}" />
+
+
+        <Label x:Name="errorLabel" TextColor="Red" IsVisible="False" />
+    </VerticalStackLayout>
+    
+</ContentPage>

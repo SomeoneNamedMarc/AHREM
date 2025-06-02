@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+			 xmlns:vm="clr-namespace:AHREM_Mobile_App.ViewModels"
+			 x:Class="AHREM_Mobile_App.Views.DeviceDetailPage"
+			 x:DataType="vm:DeviceDetailViewModel">
+
+    <ScrollView>
+        <StackLayout Padding="20">
+            <Label Text="{Binding LatestDeviceData.RoomName}" FontSize="24" FontAttributes="Bold" />
+            <Label Text="{Binding LatestDeviceData.Temperature, StringFormat='Temperature: {0:F1}°C'}" />
+            <Label Text="{Binding LatestDeviceData.Humidity, StringFormat='Humidity: {0:F1}%'}" />
+            <Label Text="{Binding LatestDeviceData.Radon, StringFormat='Radon: {0:F1}'}" />
+            <Label Text="{Binding LatestDeviceData.PPM, StringFormat='PPM: {0:F1}'}" />
+            <Label Text="{Binding LatestDeviceData.AirQuality, StringFormat='Air Quality: {0:F1}'}" />
+            <Label Text="{Binding LatestDeviceData.TimeStamp, StringFormat='Time: {0:G}'}" />
+        </StackLayout>
+    </ScrollView>
+</ContentPage>

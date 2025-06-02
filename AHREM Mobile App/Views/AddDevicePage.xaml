@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+			 xmlns:vm="clr-namespace:AHREM_Mobile_App.ViewModels"
+			 x:Class="AHREM_Mobile_App.Views.AddDevicePage"
+			 x:DataType="vm:AddDeviceViewModel">
+
+    <ScrollView Padding="20">
+        <VerticalStackLayout Spacing="20">
+
+            <Label Text="Device Name" FontSize="18" />
+            <Entry Text="{Binding DeviceName}" Placeholder="Enter device name" />
+
+            <Label Text="PPM Threshold (0-100)" FontSize="18" />
+            <Slider x:Name="PPMSlider" Minimum="0" Maximum="100" Value="{Binding PPMThreshold}" />
+            <Label x:Name="PPMLabel" Text="{Binding PPMThresholdText}" FontSize="14" />
+
+            <Label Text="Temperature Threshold (0-100)" FontSize="18" />
+            <Slider x:Name="tempSlider" Minimum="0" Maximum="100" Value="{Binding TempThreshold}"/>
+            <Label x:Name="tempLabel" Text="{Binding TempThresholdText}" FontSize="14" />
+
+            <Label Text="Humidity Threshold (0-100)" FontSize="18" />
+            <Slider x:Name="humiditySlider" Minimum="0" Maximum="100" Value="{Binding HumidityThreshold}"/>
+            <Label x:Name="humidityLabel" Text="{Binding HumidityThresholdText}" FontSize="14" />
+
+            <Button Text="Add Device" Command="{Binding AddDeviceCommand}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+    
+</ContentPage>

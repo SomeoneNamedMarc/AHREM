@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+			 xmlns:vm="clr-namespace:AHREM_Mobile_App.ViewModels"
+			 x:Class="AHREM_Mobile_App.Views.VerifyDevicePage"
+			 x:DataType="vm:VerifyDeviceViewModel">
+
+
+    <ScrollView Padding="20">
+        <VerticalStackLayout Spacing="20">
+
+            <Label Text="Device Code" FontSize="18" />
+            <Entry Text="{Binding DeviceCode}" Placeholder="Enter device Code" />
+
+            <Button Text="Verify Device" Command="{Binding VerifyDeviceCommand}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
