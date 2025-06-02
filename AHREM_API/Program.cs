@@ -12,6 +12,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
 
 namespace AHREM_API
 {
@@ -175,11 +176,17 @@ namespace AHREM_API
                         Expires = DateTime.UtcNow.AddHours(1),
                         SigningCredentials = new SigningCredentials(tokenKey, SecurityAlgorithms.HmacSha256)
                     });
-                    return new { token };
+                    return Results.Ok(new { token });
                 }
                 return Results.Unauthorized();
             });
+
+            app.MapPost("/VerifyDevice", (HttpContext httpContext) =>
+            {
+                return Results.Ok("yay!");
+            });
             #endregion
+
             app.Run();
         }
     }
