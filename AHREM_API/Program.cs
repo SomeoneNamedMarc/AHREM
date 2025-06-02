@@ -2,6 +2,7 @@
 using AHREM_API.Models;
 using AHREM_API.Services;
 using Microsoft.AspNetCore.Components.Sections;
+using Microsoft.IdentityModel.JsonWebTokens;
 using MySqlConnector;
 using System.Data;
 using System.Diagnostics;
@@ -16,6 +17,7 @@ namespace AHREM_API
     {
         public static void Main(string[] args)
         {
+            #region Setup
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
@@ -37,11 +39,12 @@ namespace AHREM_API
             {
                 app.MapOpenApi();
             }
+            #endregion
 
             #region Users
-            app.MapGet("GetAllUsers", (DBService dBService) =>
+            app.MapGet("GetAllUsers", (DBService dbService) =>
             {
-                var users = dBService.GetAllUsers();
+                var users = dbService.GetAllUsers();
                 if (users != null && users.Count > 0)
                 {
                     return Results.Ok(users);
@@ -77,9 +80,9 @@ namespace AHREM_API
 
             #region Devices
             // Adds new device to database.
-            app.MapPost("/AddDevice", (Device device, DBService dBService) =>
+            app.MapPost("/AddDevice", (Device device, DBService dbService) =>
             {
-                var test = dBService.AddDevice(device);
+                var test = dbService.AddDevice(device);
 
                 if (!test)
                 {
@@ -90,11 +93,11 @@ namespace AHREM_API
             });
 
             // Removes device with given ID.
-            app.MapGet("/RemoveDevice", (int? id, DBService dBService) =>
+            app.MapGet("/RemoveDevice", (int? id, DBService dbService) =>
             {
                 if (id != null)
                 {
-                    return Results.Ok(dBService.DeleteDevice(id.Value));
+                    return Results.Ok(dbService.DeleteDevice(id.Value));
                 }
                 return Results.BadRequest("No device with given ID!");
             });
@@ -112,34 +115,34 @@ namespace AHREM_API
             });
 
             // Get a list of all device (for admins).
-            app.MapGet("/GetAllDevices", (DBService dBService) =>
+            app.MapGet("/GetAllDevices", (DBService dbService) =>
             {
-                return Results.Ok(dBService.GetAllDevices);
+                return Results.Ok(dbService.GetAllDevices);
             });
             #endregion
 
             #region Device Data
             // Get all data for device with a certain ID or room name.
-            app.MapGet("/GetDataForDevice", (int? id, string? roomName, DBService dBService) =>
+            app.MapGet("/GetDataForDevice", (int? id, string? roomName, DBService dbService) =>
             {
                 Debug.WriteLine($"Recieved request - Device ID: {id}, Room: {roomName}");
 
                 if (id != null)
                 {
-                    return Results.Ok(dBService.GetDeviceDataForDeviceId(id.Value));
+                    return Results.Ok(dbService.GetDeviceDataForDeviceId(id.Value));
                 }
                 else if (roomName != null)
                 {
-                    return Results.Ok(dBService.GetDeviceDataForRoomName(roomName));
+                    return Results.Ok(dbService.GetDeviceDataForRoomName(roomName));
                 }
 
                 return Results.BadRequest("No device with that ID!");
             });
 
             // Post a devices measurment of airquality and all relevant data.
-            app.MapPost("/PostDataForDevice", (DeviceData deviceData, DBService dBService) =>
+            app.MapPost("/PostDataForDevice", (DeviceData deviceData, DBService dbService) =>
             {
-                var test = dBService.PostDeviceData(deviceData);
+                var test = dbService.PostDeviceData(deviceData);
 
                 if (!test)
                 {
@@ -153,6 +156,13 @@ namespace AHREM_API
             {
                 return Results.Ok("yay!");
             }); // TODO
+            #endregion
+
+            #region Login/Verify
+            app.MapPost("/Login", (LoginRequest loginRequest, DBService dbService) =>
+            {
+                
+            });
             #endregion
         }
     }

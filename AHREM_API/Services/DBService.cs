@@ -293,77 +293,23 @@ namespace AHREM_API.Services
             return false;
         }
 
-        /*
-        /// <summary>
-        /// Queries db, provide MySQL object and query string.
-        /// </summary>
-        /// <param name="mySqlConnection"></param>
-        /// <param name="strQuery"></param>
-        /// <returns></returns>
-        public List<object> QueryDB(MySqlConnection mySqlConnection, string strQuery)
+        public bool CanLogin(LoginRequest loginRequest)
         {
-            List<object> strData = new List<object>();
-
-            if (string.IsNullOrEmpty(strQuery) || mySqlConnection.Equals(null))
+            if (_connection != null)
             {
-                return null;
-            }
-            mySqlConnection.Open();
-            using (var cmd = mySqlConnection.CreateCommand())
-            {
-                cmd.CommandType = CommandType.Text;
-                cmd.CommandTimeout = 300;
-                cmd.CommandText = strQuery;
-
-                MySqlDataReader sqlData = cmd.ExecuteReader();
-
-                while (sqlData.Read())
+                _connection.Open();
+                using (var cmd = _connection.CreateCommand())
                 {
-                    Debug.WriteLine($"sqlData depth: {sqlData.VisibleFieldCount}. Data: {sqlData[1]}");
+                    cmd.CommandType = CommandType.Text;
+                    cmd.CommandTimeout = 300;
+                    cmd.CommandText = $"SELECT * FROM user WHERE Email = \"{loginRequest.Username}\" AND Password = \"{loginRequest.Password}\"";
+
+                    MySqlDataReader sqlData = cmd.ExecuteReader();
+
+                    return sqlData.Read();
                 }
-
-                if (sqlData == null)
-                {
-                    cmd.Dispose();
-                    return null;
-                }
-                else
-                {
-
-                    strData.Add("test");
-                    cmd.Dispose();
-                }
-
-                mySqlConnection.Close();
-
-                return strData;
             }
+            return false;
         }
-        private DateTime UnixTimeToDateTime(long unixTime)
-        {
-            DateTime epoch = DateTime.UnixEpoch;
-            return epoch.AddSeconds(unixTime).ToLocalTime();
-        }
-
-        private long DateTimeToUnixTime(DateTime dateTime)
-        {
-            DateTime epoch = DateTime.UnixEpoch;
-            return (long)(dateTime.ToUniversalTime() - epoch).TotalSeconds;
-        }
-        
-        public MySqlConnection ConnectToDB(string connectionString)
-        {
-            try
-            {
-                var mySqlConnection = new MySqlConnection(connectionString);
-                return mySqlConnection;
-            }
-            catch (MySqlException e)
-            {
-                Debug.WriteLine($"Exception caught: {e.ToString}");
-                return null;
-            }
-        }
-        */
     }
 }
