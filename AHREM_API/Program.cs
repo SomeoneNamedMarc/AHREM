@@ -3,12 +3,14 @@ using AHREM_API.Models;
 using AHREM_API.Services;
 using Microsoft.AspNetCore.Components.Sections;
 using Microsoft.IdentityModel.JsonWebTokens;
+using Microsoft.IdentityModel.Tokens;
 using MySqlConnector;
 using System.Data;
 using System.Diagnostics;
 using System.Net.Mail;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Text.Json;
 
 namespace AHREM_API
@@ -19,6 +21,9 @@ namespace AHREM_API
         {
             #region Setup
             var builder = WebApplication.CreateBuilder(args);
+
+            // Secret
+            var key = builder.Configuration["Jwt:Key"];
 
             // Add services to the container.
             builder.Configuration
@@ -74,8 +79,6 @@ namespace AHREM_API
                 }
                 return Results.BadRequest("No user ID or email provided!");
             });
-
-            app.Run();
             #endregion
 
             #region Devices
@@ -161,9 +164,23 @@ namespace AHREM_API
             #region Login/Verify
             app.MapPost("/Login", (LoginRequest loginRequest, DBService dbService) =>
             {
-                
+                if (dbService.CanLogin(loginRequest) && key != null)
+                {
+                    var handler = new JsonWebTokenHandler();
+                    var tokenKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
+
+                    var token = handler.CreateToken(new SecurityTokenDescriptor
+                    {
+                        Claims = new Dictionary<string, object>{ ["user"] = loginRequest.Username },
+                        Expires = DateTime.UtcNow.AddHours(1),
+                        SigningCredentials = new SigningCredentials(tokenKey, SecurityAlgorithms.HmacSha256)
+                    });
+                    return token;
+                }
+                return Results.Unauthorized();
             });
             #endregion
+            app.Run();
         }
     }
 }
