@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+	x:Class="AHREM_Mobile_App.AppShell"
+	xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+	xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+	xmlns:local="clr-namespace:AHREM_Mobile_App"
+	xmlns:views="clr-namespace:AHREM_Mobile_App.Views">
+
+    <TabBar>
+        <ShellContent
+			Title="Dashboard"
+			Icon="iconblank.png"
+            Route="Dashboard"
+			ContentTemplate="{DataTemplate views:DashboardPage}" />
+        <ShellContent
+			Title="Device List"
+			Icon="iconblank.png"
+            Route="DeviceList"
+			ContentTemplate="{DataTemplate views:DeviceListPage}" />
+        <ShellContent
+			Title="Settings"
+			Icon="iconblank.png"
+            Route="Settings"
+			ContentTemplate="{DataTemplate views:SettingsPage}" />
+    </TabBar>
+
+
+    <!-- Non-menu items -->
+    <ShellContent
+	Title="Login"
+    Route="Login"
+	ContentTemplate="{DataTemplate views:LoginPage}"/>
+    <ShellContent
+	Title="Add Device"
+    Route="AddDevice"
+	ContentTemplate="{DataTemplate views:AddDevicePage}"/>
+    <ShellContent
+	Title="Verify Device"
+    Route="VerifyDevice"
+	ContentTemplate="{DataTemplate views:VerifyDevicePage}"/>
+</Shell>
