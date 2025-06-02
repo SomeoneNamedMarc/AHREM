@@ -180,11 +180,6 @@ namespace AHREM_API
                 }
                 return Results.Unauthorized();
             });
-
-            app.MapPost("/VerifyDevice", (HttpContext httpContext) =>
-            {
-                return Results.Ok("yay!");
-            });
             #endregion
 
             app.Run();
