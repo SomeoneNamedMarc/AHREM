@@ -175,7 +175,7 @@ namespace AHREM_API
                         Expires = DateTime.UtcNow.AddHours(1),
                         SigningCredentials = new SigningCredentials(tokenKey, SecurityAlgorithms.HmacSha256)
                     });
-                    return token;
+                    return new { token };
                 }
                 return Results.Unauthorized();
             });
