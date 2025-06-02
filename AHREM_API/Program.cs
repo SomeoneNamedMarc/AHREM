@@ -172,13 +172,13 @@ namespace AHREM_API
 
                     var token = handler.CreateToken(new SecurityTokenDescriptor
                     {
-                        Claims = new Dictionary<string, object>{ ["user"] = loginRequest.Username },
+                        Claims = new Dictionary<string, object>{ ["user"] = loginRequest.Email },
                         Expires = DateTime.UtcNow.AddHours(1),
                         SigningCredentials = new SigningCredentials(tokenKey, SecurityAlgorithms.HmacSha256)
                     });
                     return Results.Ok(new { token });
                 }
-                return Results.Unauthorized();
+                return Results.Problem("Email or Password is incorrect!");
             });
             #endregion
 

@@ -302,7 +302,7 @@ namespace AHREM_API.Services
                 {
                     cmd.CommandType = CommandType.Text;
                     cmd.CommandTimeout = 300;
-                    cmd.CommandText = $"SELECT * FROM user WHERE Email = \"{loginRequest.Username}\" AND Password = \"{loginRequest.Password}\"";
+                    cmd.CommandText = $"SELECT * FROM user WHERE Email = \"{loginRequest.Email}\" AND Password = \"{loginRequest.Password}\"";
 
                     MySqlDataReader sqlData = cmd.ExecuteReader();
 
