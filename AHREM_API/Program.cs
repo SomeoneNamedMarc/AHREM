@@ -4,12 +4,14 @@ using AHREM_API.Services;
 using Microsoft.AspNetCore.Components.Sections;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using MySqlConnector;
 using NRedisStack;
 using NRedisStack.RedisStackCommands;
+using RTools_NTS.Util;
 using StackExchange.Redis;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
@@ -214,67 +216,45 @@ namespace AHREM_API
             #region Login/Verify
             app.MapPost("/API/Login", (HttpContext httpContext, LoginRequest loginRequest, DBService dbService) =>
             {
-                Debug.WriteLine(builder.Configuration["ConnectionStrings:Redis"]);
-
                 ConnectionMultiplexer redis = ConnectionMultiplexer.Connect(builder.Configuration["ConnectionStrings:Redis"]);
                 IDatabase redisDB = redis.GetDatabase();
 
                 JsonCommands json = redisDB.JSON();
 
-                var userID = Guid.NewGuid().ToString("N");
-                var key = $"User:{userID}";
+                #region redis dummy data setup
+                json.Set("test@gmail.com", "$", "\"test123\"");
 
-                json.Set(key, "$", new
+                json.Set("MURK@mail.com", "$", "\"MURKINGIT!\"");
+
+                json.Set("Jannick@mail.com", "$", "\"cwossdwessingUWU\"");
+                #endregion
+
+                var result = (string?)(json.Get(key: loginRequest.Email));
+
+                if(!string.IsNullOrEmpty(result))
                 {
-                    Email = "test@mail.com",
-                    Password = "test123"
-                });
+                    string trimmedPwd = result.Trim('"');
 
-                userID = Guid.NewGuid().ToString("N");
-                key = $"User:{userID}";
+                    Debug.WriteLine($"loginRequest pwd: {loginRequest.Password}");
+                    Debug.WriteLine($"result pwd: {result}");
 
-                json.Set(key, "$", new
+                    if (loginRequest.Password.Equals(trimmedPwd))
+                    {
+                        var token = GenerateToken(loginRequest, key);
+                        return Results.Ok(new { token });
+                    }
+                    return Results.Problem("Email or Password is incorrect!");
+                }
+
+                if (dbService.CanLogin(loginRequest) && key != null)
                 {
-                    Email = "MURK@mail.com",
-                    Password = "MURKINGIT!"
-                });
+                    var token = GenerateToken(loginRequest, key);
 
-                userID = Guid.NewGuid().ToString("N");
-                key = $"User:{userID}";
+                    json.Set(loginRequest.Email, "$", $"\"{loginRequest.Password}\"");
 
-                json.Set(key, "$", new
-                {
-                    Email = "Jannick@mail.com",
-                    Password = "cwossdwessingUWU"
-                });
-
-
-                /*
-                                User tempUser = new User();
-
-                                foreach (var key in (string[])keys)
-                                {
-                                    var value = redisDB.StringGet(key);
-
-                                    string token = string.Empty;
-                                }
-
-                                if (dbService.CanLogin(loginRequest) && key != null)
-                                {
-                                    string token = GenerateToken(loginRequest, key);
-
-                                    var hash = new HashEntry[]
-                                    {
-                                        new HashEntry("email", loginRequest.Email),
-                                        new HashEntry("password", loginRequest.Password)
-                                    };
-
-                                    redisDB.HashSet(loginRequest.Email, hash);
-                                }
-                */
-                //return Results.Problem("Email or Password is incorrect!");
-
-                return Results.Ok(json.Get(key: "User:"));
+                    return Results.Ok(new { token });
+                }
+                return Results.Ok(result);
             });
             #endregion
 
