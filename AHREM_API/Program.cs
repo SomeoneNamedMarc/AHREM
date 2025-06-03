@@ -2,11 +2,16 @@
 using AHREM_API.Models;
 using AHREM_API.Services;
 using Microsoft.AspNetCore.Components.Sections;
+using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using MySqlConnector;
+using NRedisStack;
+using NRedisStack.RedisStackCommands;
+using StackExchange.Redis;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Diagnostics;
 using System.Net.Http;
@@ -209,20 +214,67 @@ namespace AHREM_API
             #region Login/Verify
             app.MapPost("/API/Login", (HttpContext httpContext, LoginRequest loginRequest, DBService dbService) =>
             {
-                if (dbService.CanLogin(loginRequest) && key != null)
-                {
-                    var handler = new JsonWebTokenHandler();
-                    var tokenKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
+                Debug.WriteLine(builder.Configuration["ConnectionStrings:Redis"]);
 
-                    var token = handler.CreateToken(new SecurityTokenDescriptor
-                    {
-                        Claims = new Dictionary<string, object> { ["email"] = loginRequest.Email },
-                        Expires = DateTime.UtcNow.AddHours(1),
-                        SigningCredentials = new SigningCredentials(tokenKey, SecurityAlgorithms.HmacSha256)
-                    });
-                    return Results.Ok(new { token });
-                }
-                return Results.Problem("Email or Password is incorrect!");
+                ConnectionMultiplexer redis = ConnectionMultiplexer.Connect(builder.Configuration["ConnectionStrings:Redis"]);
+                IDatabase redisDB = redis.GetDatabase();
+
+                JsonCommands json = redisDB.JSON();
+
+                var userID = Guid.NewGuid().ToString("N");
+                var key = $"User:{userID}";
+
+                json.Set(key, "$", new
+                {
+                    Email = "test@mail.com",
+                    Password = "test123"
+                });
+
+                userID = Guid.NewGuid().ToString("N");
+                key = $"User:{userID}";
+
+                json.Set(key, "$", new
+                {
+                    Email = "MURK@mail.com",
+                    Password = "MURKINGIT!"
+                });
+
+                userID = Guid.NewGuid().ToString("N");
+                key = $"User:{userID}";
+
+                json.Set(key, "$", new
+                {
+                    Email = "Jannick@mail.com",
+                    Password = "cwossdwessingUWU"
+                });
+
+
+                /*
+                                User tempUser = new User();
+
+                                foreach (var key in (string[])keys)
+                                {
+                                    var value = redisDB.StringGet(key);
+
+                                    string token = string.Empty;
+                                }
+
+                                if (dbService.CanLogin(loginRequest) && key != null)
+                                {
+                                    string token = GenerateToken(loginRequest, key);
+
+                                    var hash = new HashEntry[]
+                                    {
+                                        new HashEntry("email", loginRequest.Email),
+                                        new HashEntry("password", loginRequest.Password)
+                                    };
+
+                                    redisDB.HashSet(loginRequest.Email, hash);
+                                }
+                */
+                //return Results.Problem("Email or Password is incorrect!");
+
+                return Results.Ok(json.Get(key: "User:"));
             });
             #endregion
 
@@ -230,7 +282,7 @@ namespace AHREM_API
         }
         public static bool IsValidToken(HttpContext httpContext, string key)
         {
-            if(string.IsNullOrEmpty(key))
+            if (string.IsNullOrEmpty(key))
             {
                 return false;
             }
@@ -266,6 +318,20 @@ namespace AHREM_API
             {
                 return false;
             }
+        }
+
+        public static string GenerateToken(LoginRequest loginRequest, string key)
+        {
+            var handler = new JsonWebTokenHandler();
+            var tokenKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
+
+            var token = handler.CreateToken(new SecurityTokenDescriptor
+            {
+                Claims = new Dictionary<string, object> { ["email"] = loginRequest.Email },
+                Expires = DateTime.UtcNow.AddHours(1),
+                SigningCredentials = new SigningCredentials(tokenKey, SecurityAlgorithms.HmacSha256)
+            });
+            return token;
         }
     }
 }
