@@ -1,315 +1,81 @@
 ﻿using AHREM_API.Models;
-using MySqlConnector;
-using System.Data;
-using System.Diagnostics;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace AHREM_API.Services
 {
     public class DBService
     {
-        private readonly string _connectionString;
-        private readonly MySqlConnection _connection;
-        public DBService(IConfiguration config) 
+        private readonly HttpClient _httpClient;
+        private readonly string _apiBaseUrl;
+
+        public DBService(IHttpClientFactory httpClientFactory, IConfiguration config)
         {
-            _connectionString = config.GetConnectionString("DefaultConnection");
-            _connection = new MySqlConnection(_connectionString);
+            _httpClient = httpClientFactory.CreateClient();
+            _apiBaseUrl = config["localhost:5052/api"];
         }
 
-        public User GetUser(int id)
+        public async Task<User?> GetUser(int id)
         {
-            if (id != null && id >= 0)
-            {
-                _connection.Open();
-                using (var cmd = _connection.CreateCommand())
-                {
-                    cmd.CommandType = CommandType.Text;
-                    cmd.CommandTimeout = 300;
-                    cmd.CommandText = $"SELECT * FROM user WHERE ID = {id}";
-                    MySqlDataReader sqlData = cmd.ExecuteReader();
-                    if (sqlData.Read())
-                    {
-                        return new User
-                        {
-                            ID = sqlData.GetInt16("ID"),
-                            Email = sqlData.GetString("Email"),
-                            Password = sqlData.GetString("Password"),
-                            IsAdmin = sqlData.GetBoolean("IsAdmin")
-                        };
-                    }
-                }
-            }
-            return null;
+            return await _httpClient.GetFromJsonAsync<User>($"{_apiBaseUrl}/users/{id}");
         }
-        public User GetUser(string email)
+
+        public async Task<User?> GetUser(string email)
         {
-            if (!string.IsNullOrEmpty(email))
-            {
-                _connection.Open();
-                using (var cmd = _connection.CreateCommand())
-                {
-                    cmd.CommandType = CommandType.Text;
-                    cmd.CommandTimeout = 300;
-                    cmd.CommandText = $"SELECT * FROM user WHERE Email = \"{email}\"";
-                    MySqlDataReader sqlData = cmd.ExecuteReader();
-                    if (sqlData.Read())
-                    {
-                        return new User
-                        {
-                            ID = sqlData.GetInt16("ID"),
-                            Email = sqlData.GetString("Email"),
-                            Password = sqlData.GetString("Password"),
-                            IsAdmin = sqlData.GetBoolean("IsAdmin")
-                        };
-                    }
-                }
-            }
+            var response = await _httpClient.GetAsync($"{_apiBaseUrl}/users/by-email?email={email}");
+            if (response.IsSuccessStatusCode)
+                return await response.Content.ReadFromJsonAsync<User>();
             return null;
         }
 
-        public List<User> GetAllUsers()
+        public async Task<List<User>> GetAllUsers()
         {
-            _connection.Open();
-            using (var cmd = _connection.CreateCommand())
-            {
-                cmd.CommandType = CommandType.Text;
-                cmd.CommandTimeout = 300;
-                cmd.CommandText = "SELECT * FROM user";
-
-                MySqlDataReader sqlData = cmd.ExecuteReader();
-
-                List<User> tempList = new List<User>();
-                while (sqlData.Read())
-                {
-                    tempList.Add(new User
-                    {
-                        ID = sqlData.GetInt16("ID"),
-                        Email = sqlData.GetString("Email"),
-                        Password = sqlData.GetString("Password"),
-                        IsAdmin = sqlData.GetBoolean("IsAdmin")
-                    });
-                }
-                return tempList;
-            }
+            return await _httpClient.GetFromJsonAsync<List<User>>($"{_apiBaseUrl}/users") ?? new List<User>();
         }
 
-        public List<DeviceData> GetDeviceDataForDeviceId(int deviceId)
+        public async Task<List<DeviceData>> GetDeviceDataForDeviceId(int deviceId)
         {
-            if(_connection != null)
-            {
-                _connection.Open();
-                using (var cmd = _connection.CreateCommand())
-                {
-                    cmd.CommandType = CommandType.Text;
-                    cmd.CommandTimeout = 300;
-                    cmd.CommandText = $"SELECT * FROM data WHERE DeviceID = {deviceId}";
-
-                    MySqlDataReader sqlData = cmd.ExecuteReader();
-
-                    List<DeviceData> tempList = new List<DeviceData>();
-
-                    while (sqlData.Read())
-                    {
-                        tempList.Add(
-                            new DeviceData
-                            {
-                                ID = sqlData.GetInt16("ID"),
-                                RoomName = sqlData.GetString("RoomName"),
-                                Temperature = sqlData.GetFloat("Temperature"),
-                                Humidity = sqlData.GetFloat("Humidity"),
-                                Radon = sqlData.GetFloat("Radon"),
-                                PPM = sqlData.GetFloat("PPM"),
-                                AirQuality = sqlData.GetFloat("AirQuality"),
-                                DeviceID = sqlData.GetInt16("DeviceID"),
-                                TimeStamp = sqlData.GetDateTime("TimeStamp")
-                            }
-                        );
-                    }
-                    return tempList;
-                }
-            }
-            return new List<DeviceData>();
+            return await _httpClient.GetFromJsonAsync<List<DeviceData>>($"{_apiBaseUrl}/devices/{deviceId}/data") ?? new List<DeviceData>();
         }
 
-        public List<DeviceData> GetDeviceDataForRoomName(string roomName)
+        public async Task<List<DeviceData>> GetDeviceDataForRoomName(string roomName)
         {
-            if (_connection != null)
-            {
-                _connection.Open();
-                using (var cmd = _connection.CreateCommand())
-                {
-                    cmd.CommandType = CommandType.Text;
-                    cmd.CommandTimeout = 300;
-                    cmd.CommandText = $"SELECT * FROM data WHERE RoomName = \"{roomName}\"";
-
-                    MySqlDataReader sqlData = cmd.ExecuteReader();
-
-                    List<DeviceData> tempList = new List<DeviceData>();
-
-                    while (sqlData.Read())
-                    {
-                        tempList.Add(
-                            new DeviceData
-                            {
-                                ID = sqlData.GetInt16("ID"),
-                                RoomName = sqlData.GetString("RoomName"),
-                                Temperature = sqlData.GetFloat("Temperature"),
-                                Humidity = sqlData.GetFloat("Humidity"),
-                                Radon = sqlData.GetFloat("Radon"),
-                                PPM = sqlData.GetFloat("PPM"),
-                                AirQuality = sqlData.GetFloat("AirQuality"),
-                                DeviceID = sqlData.GetInt16("DeviceID"),
-                                TimeStamp = sqlData.GetDateTime("TimeStamp")
-                            }
-                        );
-                    }
-                    return tempList;
-                }
-            }
-            return new List<DeviceData>();
+            return await _httpClient.GetFromJsonAsync<List<DeviceData>>($"{_apiBaseUrl}/data/by-room?roomName={roomName}") ?? new List<DeviceData>();
         }
 
-        public Device GetDevice(int i)
+        public async Task<Device?> GetDevice(int id)
         {
-            if(_connection != null)
-            {
-                _connection.Open();
-                using (var cmd = _connection.CreateCommand())
-                {
-                    cmd.CommandType = CommandType.Text;
-                    cmd.CommandTimeout = 300;
-                    cmd.CommandText = $"SELECT * FROM devices WHERE ID = {i}";
-
-                    MySqlDataReader sqlData = cmd.ExecuteReader();
-
-                    if (sqlData.Read())
-                    {
-                        return new Device
-                        {
-                            ID = sqlData.GetInt16("ID"),
-                            IsActive = sqlData.GetBoolean("IsActive"),
-                            Firmware = sqlData.GetString("Firmware"),
-                            MAC = sqlData.GetString("MAC")
-                        };
-                    }
-                }
-            }
-            return null;
+            return await _httpClient.GetFromJsonAsync<Device>($"{_apiBaseUrl}/devices/{id}");
         }
 
-        public List<Device> GetAllDevices()
+        public async Task<List<Device>> GetAllDevices()
         {
-            if (_connection != null)
-            {
-                _connection.Open();
-                using (var cmd = _connection.CreateCommand())
-                {
-                    cmd.CommandType = CommandType.Text;
-                    cmd.CommandTimeout = 300;
-                    cmd.CommandText = $"SELECT * FROM devices";
-
-                    MySqlDataReader sqlData = cmd.ExecuteReader();
-
-                    List<Device> tempList = new List<Device>();
-
-                    while (sqlData.Read())
-                    {
-                        tempList.Add(new Device
-                        {
-                            ID = sqlData.GetInt16("ID"),
-                            IsActive = sqlData.GetBoolean("IsActive"),
-                            Firmware = sqlData.GetString("Firmware"),
-                            MAC = sqlData.GetString("MAC")
-                        });
-                    }
-
-                    return tempList;
-                }
-            }
-            return null;
+            return await _httpClient.GetFromJsonAsync<List<Device>>($"{_apiBaseUrl}/devices") ?? new List<Device>();
         }
 
-        public bool PostDeviceData(DeviceData deviceData)
+        public async Task<bool> PostDeviceData(DeviceData deviceData)
         {
-            if (_connection != null)
-            {
-                string query = "INSERT INTO data (ID, RoomName, Temperature, Humidity, Radon, PPM, AirQuality, DeviceID, TimeStamp) VALUES (@ID, @RoomName, @Temperature, @Humidity, @Radon, @PPM, @AirQuality, @DeviceID, @TimeStamp)";
-                _connection.Open();
-                using (var cmd = _connection.CreateCommand())
-                {
-                    cmd.Parameters.AddWithValue("@ID", deviceData.ID);
-                    cmd.Parameters.AddWithValue("@RoomName", deviceData.RoomName);
-                    cmd.Parameters.AddWithValue("@Temperature", deviceData.Temperature);
-                    cmd.Parameters.AddWithValue("@Humidity", deviceData.Humidity);
-                    cmd.Parameters.AddWithValue("@Radon", deviceData.Radon);
-                    cmd.Parameters.AddWithValue("@PPM", deviceData.PPM);
-                    cmd.Parameters.AddWithValue("@AirQuality", deviceData.AirQuality);
-                    cmd.Parameters.AddWithValue("@DeviceID", deviceData.DeviceID);
-                    cmd.Parameters.AddWithValue("@TimeStamp", deviceData.TimeStamp);
-                    cmd.ExecuteNonQuery();
-                }
-                return true;
-            }
-            return false;
+            var response = await _httpClient.PostAsJsonAsync($"{_apiBaseUrl}/data", deviceData);
+            return response.IsSuccessStatusCode;
         }
 
-        public bool AddDevice(Device device)
+        public async Task<bool> AddDevice(Device device)
         {
-            if (_connection != null)
-            {
-                string query = "INSERT INTO devices (ID, IsActive, Firmware, MAC) VALUES (@ID, @IsActive, @Firmware, @MAC)";
-
-                _connection.Open();
-
-                using (var cmd = _connection.CreateCommand())
-                {
-                    cmd.Parameters.AddWithValue("@ID", device.ID);
-                    cmd.Parameters.AddWithValue("@RoomName", device.IsActive);
-                    cmd.Parameters.AddWithValue("@Temperature", device.Firmware);
-                    cmd.Parameters.AddWithValue("@Humidity", device.MAC);
-                    cmd.ExecuteNonQuery();
-                }
-                return true;
-            }
-            return false;
+            var response = await _httpClient.PostAsJsonAsync($"{_apiBaseUrl}/devices", device);
+            return response.IsSuccessStatusCode;
         }
 
-        public bool DeleteDevice(int id)
+        public async Task<bool> DeleteDevice(int id)
         {
-            if (_connection != null)
-            {
-                _connection.Open();
-
-                using (var cmd = _connection.CreateCommand())
-                {
-                    cmd.CommandType = CommandType.Text;
-                    cmd.CommandTimeout = 300;
-                    cmd.CommandText = "DELETE FROM devices WHERE ID = @id";
-                    cmd.Parameters.AddWithValue("@id", id);
-
-                    int affectedRows = cmd.ExecuteNonQuery();
-                    return affectedRows > 0;
-                }
-            }
-            return false;
+            var response = await _httpClient.DeleteAsync($"{_apiBaseUrl}/devices/{id}");
+            return response.IsSuccessStatusCode;
         }
 
-        public bool CanLogin(LoginRequest loginRequest)
+        public async Task<bool> CanLogin(LoginRequest loginRequest)
         {
-            if (_connection != null)
-            {
-                _connection.Open();
-                using (var cmd = _connection.CreateCommand())
-                {
-                    cmd.CommandType = CommandType.Text;
-                    cmd.CommandTimeout = 300;
-                    cmd.CommandText = $"SELECT * FROM user WHERE Email = \"{loginRequest.Email}\" AND Password = \"{loginRequest.Password}\"";
-
-                    MySqlDataReader sqlData = cmd.ExecuteReader();
-
-                    return sqlData.Read();
-                }
-            }
-            return false;
+            var response = await _httpClient.PostAsJsonAsync($"{_apiBaseUrl}/auth/login", loginRequest);
+            return response.IsSuccessStatusCode;
         }
     }
 }
