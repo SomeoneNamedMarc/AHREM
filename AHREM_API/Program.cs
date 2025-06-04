@@ -1,4 +1,3 @@
-
 using AHREM_API.Models;
 using AHREM_API.Services;
 using Microsoft.AspNetCore.Components.Sections;
@@ -58,14 +57,14 @@ namespace AHREM_API
             #endregion
 
             #region Users
-            app.MapGet("/API/GetAllUsers", (HttpContext httpContext, DBService dbService) =>
+            app.MapGet("/API/GetAllUsers", async (HttpContext httpContext, DBService dbService) =>
             {
                 if (!IsValidToken(httpContext, key))
                 {
                     return Results.Problem("Not logged in!");
                 }
 
-                var users = dbService.GetAllUsers();
+                var users = await dbService.GetAllUsersAsync();
 
                 if (users != null && users.Count > 0)
                 {
@@ -74,7 +73,7 @@ namespace AHREM_API
                 return Results.NotFound("No users found in the database!");
             });
 
-            app.MapGet("/API/GetUser", (HttpContext httpContext, int? id, string? email, DBService dbService) =>
+            app.MapGet("/API/GetUser", async (HttpContext httpContext, int? id, string? email, DBService dbService) =>
             {
                 if (!IsValidToken(httpContext, key))
                 {
@@ -83,7 +82,7 @@ namespace AHREM_API
 
                 if (id.HasValue)
                 {
-                    var user = dbService.GetUser(id.Value);
+                    var user = await dbService.GetUserAsync(id.Value);
                     if (user != null)
                     {
                         return Results.Ok(user);
@@ -92,7 +91,7 @@ namespace AHREM_API
                 }
                 else if (!string.IsNullOrEmpty(email))
                 {
-                    var user = dbService.GetUser(email);
+                    var user = await dbService.GetUserAsync(email);
                     if (user != null)
                     {
                         return Results.Ok(user);
@@ -105,14 +104,14 @@ namespace AHREM_API
 
             #region Devices
             // Adds new device to database.
-            app.MapPost("/API/AddDevice", (HttpContext httpContext, Device device, DBService dbService) =>
+            app.MapPost("/API/AddDevice", async (HttpContext httpContext, Device device, DBService dbService) =>
             {
                 if (!IsValidToken(httpContext, key))
                 {
                     return Results.Problem("Not logged in!");
                 }
 
-                var test = dbService.AddDevice(device);
+                var test = await dbService.AddDeviceAsync(device);
 
                 if (!test)
                 {
@@ -138,7 +137,7 @@ namespace AHREM_API
             }); // TODO
 
             // Removes device with given ID.
-            app.MapGet("/API/RemoveDevice", (HttpContext httpContext, int? id, DBService dbService) =>
+            app.MapGet("/API/RemoveDevice", async (HttpContext httpContext, int? id, DBService dbService) =>
             {
                 if (!IsValidToken(httpContext, key))
                 {
@@ -147,7 +146,8 @@ namespace AHREM_API
 
                 if (id != null)
                 {
-                    return Results.Ok(dbService.DeleteDevice(id.Value));
+                    var result = await dbService.DeleteDeviceAsync(id.Value);
+                    return Results.Ok(result);
                 }
                 return Results.BadRequest("No device with given ID!");
             });
@@ -160,59 +160,67 @@ namespace AHREM_API
                     return Results.Problem("Not logged in!");
                 }
 
-                var test = dbService.GetDevice(id.Value);
-
-                if (test != null)
+                if (id.HasValue)
                 {
-                    return Results.Ok(test);
+                    var test = await dbService.GetDeviceAsync(id.Value);
+
+                    if (test != null)
+                    {
+                        return Results.Ok(test);
+                    }
+                    return Results.NotFound("No device with provided ID found!");
                 }
-                return Results.NotFound("No device with provided ID found!");
+
+                return Results.BadRequest("No device ID provided!");
             });
 
-            // Get a list of all device (for admins).
-            app.MapGet("/API/GetAllDevices", (HttpContext httpContext, DBService dbService) =>
+            // Get a list of all devices (for admins).
+            app.MapGet("/API/GetAllDevices", async (HttpContext httpContext, DBService dbService) =>
             {
                 if (!IsValidToken(httpContext, key))
                 {
                     return Results.Problem("Not logged in!");
                 }
 
-                return Results.Ok(dbService.GetAllDevices);
+                var devices = await dbService.GetAllDevicesAsync();
+                return Results.Ok(devices);
             });
             #endregion
 
             #region Device Data
             // Get all data for device with a certain ID or room name.
-            app.MapGet("/API/GetDataForDevice", (HttpContext httpContext, int? id, string? roomName, DBService dbService) =>
+            app.MapGet("/API/GetDataForDevice", async (HttpContext httpContext, int? id, string? roomName, DBService dbService) =>
             {
                 if (!IsValidToken(httpContext, key))
                 {
                     return Results.Problem("Not logged in!");
                 }
 
-                Debug.WriteLine($"Recieved request - Device ID: {id}, Room: {roomName}");
+                Debug.WriteLine($"Received request - Device ID: {id}, Room: {roomName}");
 
                 if (id != null)
                 {
-                    return Results.Ok(dbService.GetDeviceDataForDeviceId(id.Value));
+                    var data = await dbService.GetDeviceDataForDeviceIdAsync(id.Value);
+                    return Results.Ok(data);
                 }
                 else if (roomName != null)
                 {
-                    return Results.Ok(dbService.GetDeviceDataForRoomName(roomName));
+                    var data = await dbService.GetDeviceDataForRoomNameAsync(roomName);
+                    return Results.Ok(data);
                 }
 
                 return Results.BadRequest("No device with that ID!");
             });
 
-            // Post a devices measurment of airquality and all relevant data.
-            app.MapPost("/API/PostDataForDevice", (HttpContext httpContext, DeviceData deviceData, DBService dbService) =>
+            // Post a device's measurement of air quality and all relevant data.
+            app.MapPost("/API/PostDataForDevice", async (HttpContext httpContext, DeviceData deviceData, DBService dbService) =>
             {
                 if (!IsValidToken(httpContext, key))
                 {
                     return Results.Problem("Not logged in!");
                 }
 
-                var test = dbService.PostDeviceData(deviceData);
+                var test = await dbService.PostDeviceDataAsync(deviceData);
 
                 if (!test)
                 {
@@ -224,24 +232,22 @@ namespace AHREM_API
             #endregion
 
             #region Login/Verify
-            app.MapPost("/API/Login", (HttpContext httpContext, LoginRequest loginRequest, DBService dbService) =>
+            app.MapPost("/API/Login", async (HttpContext httpContext, LoginRequest loginRequest, DBService dbService) =>
             {
-                ConnectionMultiplexer redis = ConnectionMultiplexer.Connect(builder.Configuration["ConnectionStrings:Redis"]);
+                ConnectionMultiplexer redis = await ConnectionMultiplexer.ConnectAsync(builder.Configuration["ConnectionStrings:Redis"]);
                 IDatabase redisDB = redis.GetDatabase();
 
                 JsonCommands json = redisDB.JSON();
 
                 #region redis dummy data setup
-                json.Set("test@gmail.com", "$", "\"test123\"");
-
-                json.Set("MURK@mail.com", "$", "\"MURKINGIT!\"");
-
-                json.Set("Jannick@mail.com", "$", "\"cwossdwessingUWU\"");
+                await json.SetAsync("test@gmail.com", "$", "\"test123\"");
+                await json.SetAsync("MURK@mail.com", "$", "\"MURKINGIT!\"");
+                await json.SetAsync("Jannick@mail.com", "$", "\"cwossdwessingUWU\"");
                 #endregion
 
-                var result = (string?)(json.Get(key: loginRequest.Email));
+                var result = (string?)await json.GetAsync(key: loginRequest.Email);
 
-                if(!string.IsNullOrEmpty(result))
+                if (!string.IsNullOrEmpty(result))
                 {
                     string trimmedPwd = result.Trim('"');
 
@@ -256,20 +262,21 @@ namespace AHREM_API
                     return Results.Problem("Email or Password is incorrect!");
                 }
 
-                if (dbService.CanLogin(loginRequest) && key != null)
+                if (await dbService.CanLoginAsync(loginRequest) && key != null)
                 {
                     var token = GenerateToken(loginRequest, key);
 
-                    json.Set(loginRequest.Email, "$", $"\"{loginRequest.Password}\"");
+                    await json.SetAsync(loginRequest.Email, "$", $"\"{loginRequest.Password}\"");
 
                     return Results.Ok(new { token });
                 }
-                return Results.Ok(result);
+                return Results.Problem("Login failed!");
             });
             #endregion
 
             app.Run();
         }
+
         public static bool IsValidToken(HttpContext httpContext, string key)
         {
             if (string.IsNullOrEmpty(key))
