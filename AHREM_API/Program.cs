@@ -131,9 +131,11 @@ namespace AHREM_API
 
                 JsonCommands json = redisDB.JSON();
 
+                string recordID = Guid.NewGuid().ToString("N");
 
+                json.SetAsync(recordID, "$", JsonSerializer.Serialize(verificationRequest)).Wait();
 
-                return Results.Ok("yay!");
+                return Results.Ok("Code posted to redis");
             }); // TODO
 
             // Removes device with given ID.
