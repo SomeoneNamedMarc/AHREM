@@ -1,11 +1,11 @@
 export interface DeviceData {
-  ID: number;
-  RoomName: string;
-  Temperature: number;
-  Humidity: number;
-  Radon: number;
-  PPM: number;
-  AirQuality: number;
-  DeviceID: number;
-  TimeStamp: Date;
+  id: number;
+  roomName: string;
+  temperature: number;
+  humidity: number;
+  radon: number;
+  ppm: number;
+  airQuality: number;
+  deviceId: number;
+  timeStamp: Date;
 }
