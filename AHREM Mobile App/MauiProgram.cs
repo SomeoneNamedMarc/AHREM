@@ -1,5 +1,6 @@
 ﻿using AHREM_Mobile_App.Services;
 using AHREM_Mobile_App.Views;
+using Microsoft.Extensions.DependencyInjection;
 using Microcharts.Maui;
 
 namespace AHREM_Mobile_App;
@@ -42,6 +43,8 @@ public static class MauiProgram
 
         builder.Services.AddSingleton<LoginViewModel>();
         builder.Services.AddSingleton<LoginPage>();
+        builder.Services.AddSingleton<ApiService>();
+        builder.Services.AddHttpClient();
 
         return builder.Build();
 	}

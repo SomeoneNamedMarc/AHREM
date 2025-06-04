@@ -36,13 +36,21 @@ export const DBService = {
   async getDeviceById(id: number): Promise<Device | null> {
     const [rows] = await pool.query('SELECT * FROM devices WHERE ID = ?', [id]);
     const devices = rows as Device[];
+    if (devices[0]) {
+      devices[0].IsActive = Boolean(devices[0].IsActive);
+    }
     return devices[0] || null;
   },
 
   async getAllDevices(): Promise<Device[]> {
     const [rows] = await pool.query('SELECT * FROM devices');
-    return rows as Device[];
+    const devices = rows as Device[];
+    devices.forEach(device => {
+      device.IsActive = Boolean(device.IsActive);
+    });
+    return devices;
   },
+
 
   async getDeviceDataByDeviceId(deviceId: number): Promise<DeviceData[]> {
     const [rows] = await pool.query('SELECT * FROM data WHERE DeviceID = ?', [deviceId]);
@@ -75,10 +83,16 @@ export const DBService = {
 
   async addDevice(device: Device): Promise<boolean> {
     const query = `INSERT INTO devices (ID, IsActive, Firmware, MAC) VALUES (?, ?, ?, ?)`;
-    const values = [device.ID, device.IsActive, device.Firmware, device.MAC];
+    const values = [
+      device.ID,
+      device.IsActive ? 1 : 0,  // convert boolean to tinyint
+      device.Firmware,
+      device.MAC
+    ];
     const [result] = await pool.query(query, values);
     return (result as any).affectedRows > 0;
   },
+
 
   async deleteDevice(id: number): Promise<boolean> {
     const [result] = await pool.query('DELETE FROM devices WHERE ID = ?', [id]);

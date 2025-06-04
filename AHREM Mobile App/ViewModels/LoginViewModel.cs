@@ -1,24 +1,41 @@
-﻿using System.Windows.Input;
+﻿using AHREM_Mobile_App.Services;
+using System.Windows.Input;
 
 namespace AHREM_Mobile_App.ViewModels;
 
 public partial class LoginViewModel : BaseViewModel
 {
+
+    private string _username = string.Empty;
+    private string _password = string.Empty;
+
+    public string Username
+    {
+        get => _username;
+        set => SetProperty(ref _username, value);
+    }
+
+    public string Password
+    {
+        get => _password;
+        set => SetProperty(ref _password, value);
+    }
+
+    private readonly ApiService _apiService;
     public ICommand LoginCommand { get; }
 
-    public LoginViewModel()
+    public LoginViewModel(ApiService apiService)
     {
+        _apiService = apiService;
         LoginCommand = new Command(async () => await OnLoginClicked());
     }
 
     private async Task OnLoginClicked()
     {
-        // Add logic for authentication, later
-        bool isAuthenticated = true;
+        bool isAuthenticated = await _apiService.LoginAsync(Username, Password);
 
         if (isAuthenticated)
         {
-            // Switching to the AppShell (which contains the "internal" program)
             if (Application.Current is App app)
             {
                 app.NavigateToAppShell();
@@ -29,4 +46,4 @@ public partial class LoginViewModel : BaseViewModel
             await Shell.Current.DisplayAlert("Error", "Invalid credentials", "OK");
         }
     }
-}
+}   
