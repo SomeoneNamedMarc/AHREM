@@ -104,21 +104,38 @@ namespace AHREM_API
 
             #region Devices
             // Adds new device to database.
-            app.MapPost("/API/AddDevice", async (HttpContext httpContext, Device device, DBService dbService) =>
+            app.MapPost("/API/AddDevice", async (HttpContext httpContext, Device device, int verificationCode, DBService dbService) =>
             {
+                ConnectionMultiplexer redis = await ConnectionMultiplexer.ConnectAsync(builder.Configuration["ConnectionStrings:Redis"]);
+                IDatabase redisDB = redis.GetDatabase();
+                var server = redis.GetServer(builder.Configuration["ConnectionStrings:Redis"]);
+
+                //JsonCommands json = redisDB.JSON();
+
                 if (!IsValidToken(httpContext, key))
                 {
                     return Results.Problem("Not logged in!");
                 }
 
-                var test = await dbService.AddDeviceAsync(device);
+                var allKeys = server.Keys(pattern: "verificationCode:*").ToArray();
 
-                if (!test)
+                foreach (var key in allKeys)
                 {
-                    return Results.Problem("Error while trying to add new device!");
-                }
+                    var jsonResult = await redisDB.JSON().GetAsync(key, ".");
+                    if (!jsonResult.IsNull)
+                    {
+                        var verificationRequest = JsonSerializer.Deserialize<VerificationRequest>(jsonResult.ToString());
+                        if (verificationRequest != null && verificationRequest.VerificationCode == verificationCode && verificationRequest.ID == device.ID)
+                        {
+                            // Verification successful, remove the key from Redis
+                            await redisDB.KeyDeleteAsync(key);
+                            await dbService.AddDeviceAsync(device);
 
-                return Results.Ok("The device has been added!");
+                            return Results.Ok($"Verification successful for device ID: {device.ID}");
+                        }
+                    }
+                }
+                return Results.Problem("Verification failed! Please check the verification code and device ID.");
             });
 
             // Verifies device, temp code on display
