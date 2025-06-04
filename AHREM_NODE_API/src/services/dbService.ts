@@ -69,9 +69,8 @@ export const DBService = {
   },
 
   async addDevice(device: Device): Promise<boolean> {
-    const query = `INSERT INTO devices (ID, IsActive, Firmware, MAC) VALUES (?, ?, ?, ?)`;
+    const query = `INSERT INTO devices (IsActive, Firmware, MAC) VALUES (?, ?, ?)`;
     const values = [
-      device.id,
       device.isActive ? 1 : 0,
       device.firmware,
       device.mac,

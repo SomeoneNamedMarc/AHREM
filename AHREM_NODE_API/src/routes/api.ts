@@ -1,5 +1,6 @@
 import express from 'express';
 import { DBService } from '../services/dbService';
+import { debug } from 'console';
 
 const router = express.Router();
 

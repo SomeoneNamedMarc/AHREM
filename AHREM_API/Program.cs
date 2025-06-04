@@ -131,7 +131,6 @@ namespace AHREM_API
                         {
                             // Verification successful, remove the key from Redis
                             await redisDB.KeyDeleteAsync(key);
-                            return Results.Ok(addDeviceRequest.Device);
                             await dbService.AddDeviceAsync(addDeviceRequest.Device);
 
                             return Results.Ok($"Verification successful for device ID: {addDeviceRequest.Device.ID}");
