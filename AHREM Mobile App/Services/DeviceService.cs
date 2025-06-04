@@ -19,13 +19,13 @@ namespace AHREM_Mobile_App.Services
             device.ID = _nextID++;
             _devices.Add(device);
         }
-
+        /*
         public DeviceService()
         {
             // Seed data
             AddDevice(new DeviceModel { RoomName = "Kitchen", Status = "Active" });
             AddDevice(new DeviceModel { RoomName = "Classroom 306", Status = "Inactive" });
             AddDevice(new DeviceModel { RoomName = "Classroom 308", Status = "Active", PPMThresh = 80, TempThresh = 23 });
-        }
+        }*/
     }
 }

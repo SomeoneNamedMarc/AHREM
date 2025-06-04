@@ -9,10 +9,17 @@ namespace AHREM_Mobile_App.Models
     public class DeviceModel
     {
         public int ID { get; set; }
-        public string? RoomName { get; set; }
-        public string? Status { get; set; }
-        public int? PPMThresh { get; set; }
-        public int? TempThresh { get; set; }
-        public int? HumThresh { get; set; }
+        public bool IsActive { get; set; }
+        public string Firmware { get; set; } = string.Empty;
+        public string MAC { get; set; } = string.Empty;
+
+        // These will be client-assigned
+        public string RoomName { get; set; } = string.Empty;
+        public int PPMThresh { get; set; } = 80;
+        public int TempThresh { get; set; } = 80;
+        public int HumThresh { get; set; } = 80;
+
+        // Optional: computed property to simplify UI binding
+        public string Status => IsActive ? "Active" : "Inactive";
     }
 }

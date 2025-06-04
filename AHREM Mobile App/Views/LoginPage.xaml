@@ -13,8 +13,9 @@
 
         <Button Text="Login" Command="{Binding LoginCommand}" />
 
-
-        <Label x:Name="errorLabel" TextColor="Red" IsVisible="False" />
+        <Label Text="{Binding ErrorMessage}"
+       TextColor="Red"
+       IsVisible="{Binding HasError}" />
     </VerticalStackLayout>
     
 </ContentPage>

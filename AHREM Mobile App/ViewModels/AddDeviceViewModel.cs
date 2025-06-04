@@ -16,7 +16,7 @@ public partial class AddDeviceViewModel : BaseViewModel
     }
 
     private async Task OnAddDeviceClicked()
-    {
+    {/*
         DeviceService.AddDevice(new DeviceModel
         {
             RoomName = string.IsNullOrWhiteSpace(DeviceName) ? null : DeviceName,
@@ -24,7 +24,7 @@ public partial class AddDeviceViewModel : BaseViewModel
             PPMThresh = PPMThreshold == 0 ? null : (int?)PPMThreshold,
             TempThresh = TempThreshold == 0 ? null : (int?)TempThreshold,
             HumThresh = HumidityThreshold == 0 ? null : (int?)HumidityThreshold
-        });
+        });*/
 
         await Shell.Current.GoToAsync("//Dashboard");
     }
