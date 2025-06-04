@@ -7,19 +7,31 @@ export const DBService = {
   async getUserById(id: number): Promise<User | null> {
     const [rows] = await pool.query('SELECT * FROM user WHERE ID = ?', [id]);
     const users = rows as User[];
+    if (users[0]) {
+      users[0].IsAdmin = Boolean(users[0].IsAdmin); // convert TinyInt to boolean
+    }
     return users[0] || null;
   },
 
   async getUserByEmail(email: string): Promise<User | null> {
     const [rows] = await pool.query('SELECT * FROM user WHERE Email = ?', [email]);
     const users = rows as User[];
+    if (users[0]) {
+      users[0].IsAdmin = Boolean(users[0].IsAdmin); // convert TinyInt to boolean
+    }
     return users[0] || null;
   },
 
   async getAllUsers(): Promise<User[]> {
     const [rows] = await pool.query('SELECT * FROM user');
-    return rows as User[];
+    const users = rows as User[];
+    // convert IsAdmin for every user in the list
+    users.forEach(user => {
+      user.IsAdmin = Boolean(user.IsAdmin);
+    });
+    return users;
   },
+
 
   async getDeviceById(id: number): Promise<Device | null> {
     const [rows] = await pool.query('SELECT * FROM devices WHERE ID = ?', [id]);
