@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.13.35828.75 d17.13
+VisualStudioVersion = 17.13.35828.75
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AHREM_API", "AHREM_API\AHREM_API.csproj", "{B489D3A6-178E-46C0-BACD-6775CDC3DDAC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AHREM Mobile App", "AHREM Mobile App\AHREM Mobile App.csproj", "{AC593B83-3945-4F7E-8263-BC932CE0EE87}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{B489D3A6-178E-46C0-BACD-6775CDC3DDAC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B489D3A6-178E-46C0-BACD-6775CDC3DDAC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B489D3A6-178E-46C0-BACD-6775CDC3DDAC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AC593B83-3945-4F7E-8263-BC932CE0EE87}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC593B83-3945-4F7E-8263-BC932CE0EE87}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC593B83-3945-4F7E-8263-BC932CE0EE87}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC593B83-3945-4F7E-8263-BC932CE0EE87}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
