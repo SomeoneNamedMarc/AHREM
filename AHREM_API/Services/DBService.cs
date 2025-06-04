@@ -16,12 +16,12 @@ namespace AHREM_API.Services
             _apiBaseUrl = config["localhost:5052/api"];
         }
 
-        public async Task<User?> GetUser(int id)
+        public async Task<User?> GetUserAsync(int id)
         {
             return await _httpClient.GetFromJsonAsync<User>($"{_apiBaseUrl}/users/{id}");
         }
 
-        public async Task<User?> GetUser(string email)
+        public async Task<User?> GetUserAsync(string email)
         {
             var response = await _httpClient.GetAsync($"{_apiBaseUrl}/users/by-email?email={email}");
             if (response.IsSuccessStatusCode)
@@ -29,50 +29,50 @@ namespace AHREM_API.Services
             return null;
         }
 
-        public async Task<List<User>> GetAllUsers()
+        public async Task<List<User>> GetAllUsersAsync()
         {
             return await _httpClient.GetFromJsonAsync<List<User>>($"{_apiBaseUrl}/users") ?? new List<User>();
         }
 
-        public async Task<List<DeviceData>> GetDeviceDataForDeviceId(int deviceId)
+        public async Task<List<DeviceData>> GetDeviceDataForDeviceIdAsync(int deviceId)
         {
             return await _httpClient.GetFromJsonAsync<List<DeviceData>>($"{_apiBaseUrl}/devices/{deviceId}/data") ?? new List<DeviceData>();
         }
 
-        public async Task<List<DeviceData>> GetDeviceDataForRoomName(string roomName)
+        public async Task<List<DeviceData>> GetDeviceDataForRoomNameAsync(string roomName)
         {
             return await _httpClient.GetFromJsonAsync<List<DeviceData>>($"{_apiBaseUrl}/data/by-room?roomName={roomName}") ?? new List<DeviceData>();
         }
 
-        public async Task<Device?> GetDevice(int id)
+        public async Task<Device?> GetDeviceAsync(int id)
         {
             return await _httpClient.GetFromJsonAsync<Device>($"{_apiBaseUrl}/devices/{id}");
         }
 
-        public async Task<List<Device>> GetAllDevices()
+        public async Task<List<Device>> GetAllDevicesAsync()
         {
             return await _httpClient.GetFromJsonAsync<List<Device>>($"{_apiBaseUrl}/devices") ?? new List<Device>();
         }
 
-        public async Task<bool> PostDeviceData(DeviceData deviceData)
+        public async Task<bool> PostDeviceDataAsync(DeviceData deviceData)
         {
             var response = await _httpClient.PostAsJsonAsync($"{_apiBaseUrl}/data", deviceData);
             return response.IsSuccessStatusCode;
         }
 
-        public async Task<bool> AddDevice(Device device)
+        public async Task<bool> AddDeviceAsync(Device device)
         {
             var response = await _httpClient.PostAsJsonAsync($"{_apiBaseUrl}/devices", device);
             return response.IsSuccessStatusCode;
         }
 
-        public async Task<bool> DeleteDevice(int id)
+        public async Task<bool> DeleteDeviceAsync(int id)
         {
             var response = await _httpClient.DeleteAsync($"{_apiBaseUrl}/devices/{id}");
             return response.IsSuccessStatusCode;
         }
 
-        public async Task<bool> CanLogin(LoginRequest loginRequest)
+        public async Task<bool> CanLoginAsync(LoginRequest loginRequest)
         {
             var response = await _httpClient.PostAsJsonAsync($"{_apiBaseUrl}/auth/login", loginRequest);
             return response.IsSuccessStatusCode;
