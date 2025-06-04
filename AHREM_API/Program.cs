@@ -122,6 +122,21 @@ namespace AHREM_API
                 return Results.Ok("The device has been added!");
             });
 
+            // Verifies device, temp code on display
+            app.MapPost("/API/VerifyDevice", (VerificationRequest request) =>
+            {
+                var verificationRequest = new VerificationRequest(request.VerificationCode, request.ID);
+
+                ConnectionMultiplexer redis = ConnectionMultiplexer.Connect(builder.Configuration["ConnectionStrings:Redis"]);
+                IDatabase redisDB = redis.GetDatabase();
+
+                JsonCommands json = redisDB.JSON();
+
+
+
+                return Results.Ok("yay!");
+            }); // TODO
+
             // Removes device with given ID.
             app.MapGet("/API/RemoveDevice", (HttpContext httpContext, int? id, DBService dbService) =>
             {
@@ -206,11 +221,6 @@ namespace AHREM_API
 
                 return Results.Ok("Posted successfully to DB!");
             });
-
-            app.MapPost("/API/VerifyDevice", (HttpContext httpContext) =>
-            {
-                return Results.Ok("yay!");
-            }); // TODO
             #endregion
 
             #region Login/Verify
@@ -314,4 +324,5 @@ namespace AHREM_API
             return token;
         }
     }
+    public record VerificationRequest(int VerificationCode, int ID);
 }
