@@ -13,7 +13,7 @@ namespace AHREM_API.Services
         public DBService(IHttpClientFactory httpClientFactory, IConfiguration config)
         {
             _httpClient = httpClientFactory.CreateClient();
-            _apiBaseUrl = config["ExternalApi:BaseUrl"]; // e.g., "https://api.external-service.com"
+            _apiBaseUrl = config["localhost:5052/api"];
         }
 
         public async Task<User?> GetUser(int id)
