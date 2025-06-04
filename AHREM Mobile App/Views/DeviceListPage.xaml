@@ -1,23 +1,22 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-			 xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:models="clr-namespace:AHREM_Mobile_App.Models"
-			 xmlns:vm="clr-namespace:AHREM_Mobile_App.ViewModels"
-			 x:Class="AHREM_Mobile_App.Views.DeviceListPage"
-			 x:DataType="vm:DeviceListViewModel"
+             xmlns:vm="clr-namespace:AHREM_Mobile_App.ViewModels"
+             x:Class="AHREM_Mobile_App.Views.DeviceListPage"
+             x:DataType="vm:DeviceListViewModel"
              x:Name="DeviceList">
 
+    <Grid RowDefinitions="*,Auto">
 
-    <VerticalStackLayout>
-
-        <CollectionView ItemsSource="{Binding Devices}"
-                SelectionMode="Single"
-                SelectionChanged="OnDeviceSelected">
+        <!-- Scrollable device list -->
+        <CollectionView Grid.Row="0"
+                        ItemsSource="{Binding Devices}"
+                        SelectionMode="Single"
+                        SelectionChanged="OnDeviceSelected">
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="models:DeviceModel">
                     <Border Padding="10" Margin="10" BackgroundColor="LightGray">
-
-
                         <VerticalStackLayout>
                             <Label Text="{Binding ID, StringFormat='Device ID:  {0}'}" FontSize="18" FontAttributes="Bold"/>
                             <Label Text="{Binding RoomName, TargetNullValue='Name:', StringFormat='Name:        {0}'}" FontSize="18" FontAttributes="Bold" Padding="0, 0, 0, 10"/>
@@ -30,7 +29,6 @@
                                                 <Setter Property="FontAttributes" Value="Bold"/>
                                                 <Setter Property="FontSize" Value="16"/>
                                             </DataTrigger>
-
                                             <DataTrigger TargetType="Label" Binding="{Binding Status}" Value="Inactive">
                                                 <Setter Property="TextColor" Value="DarkRed"/>
                                                 <Setter Property="FontAttributes" Value="Bold"/>
@@ -46,16 +44,5 @@
             </CollectionView.ItemTemplate>
         </CollectionView>
 
-        <Border Padding="20" Margin="10" BackgroundColor="LightGray" Stroke="Gray">
-            <Border.GestureRecognizers>
-                <TapGestureRecognizer Command="{Binding AddNewDeviceCommand}"/>
-            </Border.GestureRecognizers>
-
-            <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center">
-                <Label Text="+" FontSize="48" HorizontalOptions="Center"/>
-                <Label Text="Add New Device" FontSize="16" HorizontalOptions="Center"/>
-            </VerticalStackLayout>
-        </Border>
-
-    </VerticalStackLayout>
+    </Grid>
 </ContentPage>

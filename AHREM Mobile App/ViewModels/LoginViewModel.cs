@@ -8,7 +8,22 @@ public partial class LoginViewModel : BaseViewModel
 
     private string _username = string.Empty;
     private string _password = string.Empty;
-
+    private string _errorMessage = string.Empty;
+    private bool _hasError;
+    public string ErrorMessage
+    {
+        get => _errorMessage;
+        set
+        {
+            SetProperty(ref _errorMessage, value);
+            HasError = !string.IsNullOrWhiteSpace(value);
+        }
+    }
+    public bool HasError
+    {
+        get => _hasError;
+        set => SetProperty(ref _hasError, value);
+    }
     public string Username
     {
         get => _username;
@@ -32,6 +47,7 @@ public partial class LoginViewModel : BaseViewModel
 
     private async Task OnLoginClicked()
     {
+        ErrorMessage = string.Empty;
         bool isAuthenticated = await _apiService.LoginAsync(Username, Password);
 
         if (isAuthenticated)
@@ -43,7 +59,7 @@ public partial class LoginViewModel : BaseViewModel
         }
         else
         {
-            await Shell.Current.DisplayAlert("Error", "Invalid credentials", "OK");
+            ErrorMessage = "Invalid credentials. Please try again.";
         }
     }
 }   
