@@ -58,7 +58,7 @@ public partial class DeviceListViewModel : BaseViewModel
     {
         if (selectedDevice == null) return;
 
-        var page = new DeviceDetailPage(selectedDevice.ID, _deviceDataService);
+        var page = new DeviceDetailPage(selectedDevice.ID);
         await Shell.Current.Navigation.PushAsync(page);
     }
 
