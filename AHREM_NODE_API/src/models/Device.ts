@@ -1,6 +1,6 @@
 export interface Device {
-  ID: number;
-  IsActive: boolean;
-  Firmware: string;
-  MAC: string;
+  id: number;
+  isActive: boolean;
+  firmware: string;
+  mac: string;
 }

@@ -61,7 +61,7 @@ router.post('/devices', async (req, res) => {
 router.post('/auth/login', async (req, res) => {
   const { email, password } = req.body;
   const user = await DBService.getUserByEmail(email);
-  if (user && user.Password === password) {
+  if (user && user.password === password) {
     res.status(200).json({ success: true });
   } else {
     res.status(401).json({ success: false });
