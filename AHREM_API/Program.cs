@@ -122,7 +122,7 @@ namespace AHREM_API
             });
 
             // Verifies device, temp code on display
-            app.MapPost("/API/VerifyDevice", (VerificationRequest request) =>
+            app.MapPost("/API/VerifyDevice", async (VerificationRequest request) =>
             {
                 var verificationRequest = new VerificationRequest(request.VerificationCode, request.ID);
 
@@ -133,10 +133,11 @@ namespace AHREM_API
 
                 string recordID = Guid.NewGuid().ToString("N");
 
-                json.SetAsync(recordID, "$", JsonSerializer.Serialize(verificationRequest)).Wait();
+                json.SetAsync($"verificationCode:{recordID}", "$", JsonSerializer.Serialize(verificationRequest)).Wait();
+                await redisDB.KeyExpireAsync($"verificationCode:{recordID}", TimeSpan.FromSeconds(30));
 
                 return Results.Ok("Code posted to redis");
-            }); // TODO
+            });
 
             // Removes device with given ID.
             app.MapGet("/API/RemoveDevice", async (HttpContext httpContext, int? id, DBService dbService) =>
@@ -243,8 +244,13 @@ namespace AHREM_API
 
                 #region redis dummy data setup
                 await json.SetAsync("test@gmail.com", "$", "\"test123\"");
+                await redisDB.KeyExpireAsync("test@gmail.com", TimeSpan.FromDays(3));
+
                 await json.SetAsync("MURK@mail.com", "$", "\"MURKINGIT!\"");
+                await redisDB.KeyExpireAsync("test@gmail.com", TimeSpan.FromDays(3));
+
                 await json.SetAsync("Jannick@mail.com", "$", "\"cwossdwessingUWU\"");
+                await redisDB.KeyExpireAsync("test@gmail.com", TimeSpan.FromDays(3));
                 #endregion
 
                 var result = (string?)await json.GetAsync(key: loginRequest.Email);
@@ -269,6 +275,7 @@ namespace AHREM_API
                     var token = GenerateToken(loginRequest, key);
 
                     await json.SetAsync(loginRequest.Email, "$", $"\"{loginRequest.Password}\"");
+                    await redisDB.KeyExpireAsync(loginRequest.Email, TimeSpan.FromDays(3));
 
                     return Results.Ok(new { token });
                 }
