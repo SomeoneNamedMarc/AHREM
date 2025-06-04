@@ -278,9 +278,6 @@ namespace AHREM_API
                 {
                     string trimmedPwd = result.Trim('"');
 
-                    Debug.WriteLine($"loginRequest pwd: {loginRequest.Password}");
-                    Debug.WriteLine($"result pwd: {result}");
-
                     if (loginRequest.Password.Equals(trimmedPwd))
                     {
                         var token = GenerateToken(loginRequest, key);
