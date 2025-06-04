@@ -104,7 +104,7 @@ namespace AHREM_API
 
             #region Devices
             // Adds new device to database.
-            app.MapPost("/API/AddDevice", async (HttpContext httpContext, Device device, int verificationCode, DBService dbService) =>
+            app.MapPost("/API/AddDevice", async (HttpContext httpContext, AddDeviceRequest addDeviceRequest, DBService dbService) =>
             {
                 ConnectionMultiplexer redis = await ConnectionMultiplexer.ConnectAsync(builder.Configuration["ConnectionStrings:Redis"]);
                 IDatabase redisDB = redis.GetDatabase();
@@ -121,17 +121,19 @@ namespace AHREM_API
 
                 foreach (var key in allKeys)
                 {
-                    var jsonResult = await redisDB.JSON().GetAsync(key, ".");
+                    var jsonResult = await redisDB.JSON().GetAsync(key, "$");
+                    //return Results.Ok(jsonResult.ToString());
                     if (!jsonResult.IsNull)
                     {
-                        var verificationRequest = JsonSerializer.Deserialize<VerificationRequest>(jsonResult.ToString());
-                        if (verificationRequest != null && verificationRequest.VerificationCode == verificationCode && verificationRequest.ID == device.ID)
+                        string jsonString = jsonResult.ToString().Replace("$\"", "\"");
+                        var verificationRequest = JsonSerializer.Deserialize<VerificationRequest>(jsonString);
+                        if (verificationRequest != null && verificationRequest.VerificationCode == addDeviceRequest.VerificationCode && verificationRequest.ID == addDeviceRequest.Device.ID)
                         {
                             // Verification successful, remove the key from Redis
                             await redisDB.KeyDeleteAsync(key);
-                            await dbService.AddDeviceAsync(device);
+                            await dbService.AddDeviceAsync(addDeviceRequest.Device);
 
-                            return Results.Ok($"Verification successful for device ID: {device.ID}");
+                            return Results.Ok($"Verification successful for device ID: {addDeviceRequest.Device.ID}");
                         }
                     }
                 }
@@ -358,4 +360,5 @@ namespace AHREM_API
         }
     }
     public record VerificationRequest(int VerificationCode, int ID);
+    public record AddDeviceRequest(Device Device, int VerificationCode);
 }
