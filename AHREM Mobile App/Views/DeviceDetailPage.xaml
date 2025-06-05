@@ -1,19 +1,102 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-			 xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-			 xmlns:vm="clr-namespace:AHREM_Mobile_App.ViewModels"
-			 x:Class="AHREM_Mobile_App.Views.DeviceDetailPage"
-			 x:DataType="vm:DeviceDetailViewModel">
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:micro="clr-namespace:Microcharts.Maui;assembly=Microcharts.Maui"
+             x:Class="AHREM_Mobile_App.Views.DeviceDetailPage"
+             Title="{Binding ChartTitle}"
+             BackgroundColor="White">
 
-    <ScrollView>
-        <StackLayout Padding="20">
-            <Label Text="{Binding LatestDeviceData.RoomName}" FontSize="24" FontAttributes="Bold" />
-            <Label Text="{Binding LatestDeviceData.Temperature, StringFormat='Temperature: {0:F1}°C'}" />
-            <Label Text="{Binding LatestDeviceData.Humidity, StringFormat='Humidity: {0:F1}%'}" />
-            <Label Text="{Binding LatestDeviceData.Radon, StringFormat='Radon: {0:F1}'}" />
-            <Label Text="{Binding LatestDeviceData.PPM, StringFormat='PPM: {0:F1}'}" />
-            <Label Text="{Binding LatestDeviceData.AirQuality, StringFormat='Air Quality: {0:F1}'}" />
-            <Label Text="{Binding LatestDeviceData.TimeStamp, StringFormat='Time: {0:G}'}" />
-        </StackLayout>
-    </ScrollView>
+    <Grid Padding="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="350" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Debug Info -->
+        <Label Grid.Row="0"
+               Text="{Binding DebugInfo}"
+               TextColor="Gray"
+               FontSize="14"
+               HorizontalOptions="Center"
+               Margin="0,0,0,10" />
+
+        <!-- Title -->
+        <Label Grid.Row="1" 
+               Text="{Binding ChartTitle}" 
+               FontSize="20" 
+               FontAttributes="Bold"
+               HorizontalOptions="Center"
+               TextColor="Black"
+               Margin="0,0,0,20" />
+
+        <!-- Chart Container with Y-axis -->
+        <Frame Grid.Row="2" 
+               BackgroundColor="White"
+               BorderColor="LightGray"
+               CornerRadius="10"
+               Padding="10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="30" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Y-axis labels -->
+                <Grid Grid.Column="0" 
+                      VerticalOptions="FillAndExpand"
+                      Margin="0,0,5,30">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Label Grid.Row="0" Text="100" FontSize="10" VerticalOptions="Start" HorizontalOptions="End" TextColor="Black" />
+                    <Label Grid.Row="1" Text="75" FontSize="10" VerticalOptions="Center" HorizontalOptions="End" TextColor="Black" />
+                    <Label Grid.Row="2" Text="50" FontSize="10" VerticalOptions="Center" HorizontalOptions="End" TextColor="Black" />
+                    <Label Grid.Row="3" Text="25" FontSize="10" VerticalOptions="Center" HorizontalOptions="End" TextColor="Black" />
+                    <Label Grid.Row="4" Text="0" FontSize="10" VerticalOptions="End" HorizontalOptions="End" TextColor="Black" />
+                </Grid>
+
+                <!-- Chart -->
+                <micro:ChartView Grid.Column="1"
+                                 Chart="{Binding AirQualityChart}"
+                                 HeightRequest="300"
+                                 VerticalOptions="FillAndExpand"
+                                 HorizontalOptions="FillAndExpand" />
+
+                <!-- Loading Indicator -->
+                <ActivityIndicator Grid.Column="1"
+                                   IsRunning="{Binding IsLoading}"
+                                   IsVisible="{Binding IsLoading}"
+                                   Color="Blue"
+                                   VerticalOptions="Center"
+                                   HorizontalOptions="Center"
+                                   WidthRequest="50"
+                                   HeightRequest="50" />
+            </Grid>
+        </Frame>
+
+        <!-- Buttons -->
+        <HorizontalStackLayout Grid.Row="3" 
+                               HorizontalOptions="Center"
+                               Spacing="20"
+                               Margin="0,20,0,0">
+            <Button Text="Refresh Data"
+                    Command="{Binding RefreshCommand}"
+                    BackgroundColor="#2ecc71"
+                    TextColor="White"
+                    WidthRequest="150" />
+
+            <Button Text="Test Data"
+                    Command="{Binding TestDataCommand}"
+                    BackgroundColor="#3498db"
+                    TextColor="White"
+                    WidthRequest="150" />
+        </HorizontalStackLayout>
+    </Grid>
 </ContentPage>
