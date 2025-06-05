@@ -265,10 +265,10 @@ namespace AHREM_API
                 await json.SetAsync("test@gmail.com", "$", "\"test123\"");
                 await redisDB.KeyExpireAsync("test@gmail.com", TimeSpan.FromDays(3));
 
-                await json.SetAsync("MURK@mail.com", "$", "\"MURKINGIT!\"");
+                await json.SetAsync("MURK@mail.com", "$", "\"marc321!\"");
                 await redisDB.KeyExpireAsync("test@gmail.com", TimeSpan.FromDays(3));
 
-                await json.SetAsync("Jannick@mail.com", "$", "\"cwossdwessingUWU\"");
+                await json.SetAsync("Jannick@mail.com", "$", "\"jannick123\"");
                 await redisDB.KeyExpireAsync("test@gmail.com", TimeSpan.FromDays(3));
                 #endregion
 
